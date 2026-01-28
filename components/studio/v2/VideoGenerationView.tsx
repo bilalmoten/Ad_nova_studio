@@ -13,7 +13,6 @@ import {
   Loader2, 
   Film, 
   Download, 
-  Coins,
   AlertCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,7 +23,6 @@ export function VideoGenerationView() {
     shots, 
     assets, 
     addAsset, 
-    updateAsset, 
     setError,
     isGenerating,
     setIsGenerating
@@ -160,7 +158,7 @@ export function VideoGenerationView() {
                           )}>
                              {(item.video?.media_url || item.startFrame?.media_url) ? (
                                  <img 
-                                    src={item.video?.media_url || item.startFrame?.media_url} 
+                                    src={item.video?.media_url || item.startFrame?.media_url || ""} 
                                     className="w-full h-full object-cover" 
                                     alt=""
                                  />

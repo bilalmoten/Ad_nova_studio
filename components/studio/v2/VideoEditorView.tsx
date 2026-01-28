@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { useStudioStore } from '@/lib/studio/store'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
 import { cn, getGradientFromId } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import jsZip from 'jszip'
@@ -14,8 +13,7 @@ import {
   SkipBack, 
   SkipForward, 
   Download, 
-  Film,
-  Scissors
+  Film
 } from 'lucide-react'
 
 // Helper to format seconds to MM:SS
@@ -33,7 +31,7 @@ export function VideoEditorView() {
   
   // State
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0) // eslint-disable-line @typescript-eslint/no-unused-vars
   const [currentClipIndex, setCurrentClipIndex] = useState(0)
   const [showExportModal, setShowExportModal] = useState(false)
 
