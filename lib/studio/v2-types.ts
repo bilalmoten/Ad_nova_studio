@@ -35,6 +35,11 @@ export interface V2ProjectSettings {
     aspect_ratio?: '16:9' | '9:16' | '1:1' | '4:3'
     default_model?: string
     default_style?: string
+    shot_count?: number
+    visual_style?: string
+    user_notes?: string
+    reference_image_url?: string
+    initial_prompt?: string
 }
 
 /**

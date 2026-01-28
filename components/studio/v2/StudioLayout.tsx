@@ -23,9 +23,11 @@ interface StudioLayoutProps {
   cockpitContent?: React.ReactNode
   contextContent?: React.ReactNode
   assetsContent?: React.ReactNode
+  viewMode?: 'assets' | 'generate' | 'edit'
+  onViewModeChange?: (mode: 'assets' | 'generate' | 'edit') => void
 }
 
-export function StudioLayout({ children, vaultContent, cockpitContent, assetsContent }: StudioLayoutProps) {
+export function StudioLayout({ children, vaultContent, cockpitContent, assetsContent, viewMode = 'assets', onViewModeChange }: StudioLayoutProps) {
   const [isVaultOpen, setIsVaultOpen] = useState(true)
   const [activeVaultTab, setActiveVaultTab] = useState<'assets' | 'scripts'>('scripts')
   const [gridCols] = useState(4)
@@ -137,8 +139,40 @@ export function StudioLayout({ children, vaultContent, cockpitContent, assetsCon
                 <span className="text-[#a3e635] bg-[#a3e635]/10 px-2 py-0.5 rounded text-[10px] font-bold border border-[#a3e635]/30">Shot 1A</span>
             </div>
             
-            {/* Actions */}
+            {/* Actions & Modes */}
             <div className="flex items-center gap-3">
+                 {/* View Modes */}
+                 <div className="flex items-center bg-zinc-800/40 border border-zinc-700/30 rounded-lg p-1">
+                    <button 
+                        onClick={() => onViewModeChange?.('assets')}
+                        className={cn(
+                            "px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all",
+                            viewMode === 'assets' ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+                        )}
+                    >
+                        Grid
+                    </button>
+                    <button 
+                         onClick={() => onViewModeChange?.('generate')}
+                         className={cn(
+                            "px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all",
+                            viewMode === 'generate' ? "bg-[#c084fc] text-black shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+                        )}
+                    >
+                        Generate
+                    </button>
+                    <button 
+                         onClick={() => onViewModeChange?.('edit')}
+                         className={cn(
+                            "px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all",
+                            viewMode === 'edit' ? "bg-[#a3e635] text-black shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+                        )}
+                    >
+                        Edit
+                    </button>
+                 </div>
+
+                 <div className="w-px h-6 bg-zinc-800" />
                  <div className="flex items-center gap-2 bg-zinc-800/40 border border-zinc-700/30 rounded-lg px-2.5 py-1.5">
                    <Search size={12} className="text-zinc-500" />
                    <input 

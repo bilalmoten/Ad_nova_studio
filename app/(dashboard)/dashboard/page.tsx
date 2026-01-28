@@ -7,18 +7,18 @@ import { ProjectGrid } from '@/components/dashboard2/dashboard/project-grid'
 import { EmptyState } from '@/components/dashboard2/dashboard/empty-state'
 import { CreateProjectModal } from '@/components/dashboard2/dashboard/create-project-modal'
 import { GradientButton } from '@/components/dashboard2/ui/gradient-button'
-import { getStudioProjects } from '@/server/actions/studio/projects'
-import type { StudioProject } from '@/lib/studio/types'
+import { getV2Projects } from '@/server/actions/studio/v2-projects'
+import type { V2Project } from '@/lib/studio/v2-types'
 
 export default function Dashboard2Page() {
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [projects, setProjects] = useState<StudioProject[]>([])
+  const [projects, setProjects] = useState<V2Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   const loadProjects = async () => {
     setIsLoading(true)
-    const result = await getStudioProjects()
+    const result = await getV2Projects()
     
     if (result.error) {
       setError(result.error)

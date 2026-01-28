@@ -1,10 +1,10 @@
 'use client'
 
-import { StudioProject } from '@/lib/studio/types'
+import { V2Project } from '@/lib/studio/v2-types'
 import { ProjectCard } from './project-card'
 
 interface ProjectGridProps {
-  projects: StudioProject[]
+  projects: V2Project[]
   onProjectDeleted?: () => void
 }
 

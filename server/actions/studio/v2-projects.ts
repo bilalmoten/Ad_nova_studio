@@ -44,7 +44,7 @@ export async function createV2Project(
             return { data: null, error: error.message }
         }
 
-        revalidatePath('/dashboard2/studio-new')
+        revalidatePath('/dashboard')
         return { data: data as V2Project, error: null }
     } catch (err) {
         console.error('Unexpected error creating V2 project:', err)
@@ -143,7 +143,7 @@ export async function updateV2Project(
             return { data: null, error: error.message }
         }
 
-        revalidatePath('/dashboard2/studio-new')
+        revalidatePath(`/dashboard/studio/${projectId}`)
         return { data: data as V2Project, error: null }
     } catch (err) {
         console.error('Unexpected error updating V2 project:', err)
@@ -175,7 +175,7 @@ export async function deleteV2Project(
             return { success: false, error: error.message }
         }
 
-        revalidatePath('/dashboard2/studio-new')
+        revalidatePath('/dashboard')
         return { success: true, error: null }
     } catch (err) {
         console.error('Unexpected error deleting V2 project:', err)

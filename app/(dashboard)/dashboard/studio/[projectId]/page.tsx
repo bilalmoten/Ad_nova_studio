@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import { StudioLayout } from "@/components/studio/v2/StudioLayout"
 import { AssetBin } from "@/components/studio/v2/AssetBin"
 import { CockpitPromptBar } from "@/components/studio/v2/CockpitPromptBar"
@@ -13,15 +13,18 @@ import { createV2Project, getV2Projects } from "@/server/actions/studio/v2-proje
 // import type { V2Asset } from "@/lib/studio/v2-types"
 import { FileText } from "lucide-react"
 import { SidebarAssetList } from "@/components/studio/v2/SidebarAssetList"
+// We'll import these dynamically or at top lvl
+import { VideoGenerationView } from "@/components/studio/v2/VideoGenerationView"
+import { VideoEditorView } from "@/components/studio/v2/VideoEditorView"
 
-export default function StudioPage() {
+export default function StudioPage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = use(params)
   const { 
     assets, 
     setAssets, 
     isGenerating, 
     isLoadingAssets,
     setIsLoadingAssets,
-    // projectId,
     setProject,
     error,
     setError,
@@ -31,7 +34,7 @@ export default function StudioPage() {
   const [initialized, setInitialized] = useState(false)
   const [showScriptModal, setShowScriptModal] = useState(false)
 
-  // Initialize: Create or load project
+  // Initialize: Load project by ID
   useEffect(() => {
     async function initProject() {
       if (initialized) return
@@ -40,7 +43,7 @@ export default function StudioPage() {
       try {
         setIsLoadingAssets(true)
         
-        // Check for existing projects
+        // 1. Get specific project
         const { data: projects, error: projectsError } = await getV2Projects()
         
         if (projectsError) {
@@ -48,25 +51,16 @@ export default function StudioPage() {
           return
         }
 
-        let currentProject = projects[0] // Use most recent project
+        const currentProject = projects.find(p => p.id === projectId)
         
-        // Create new project if none exist
         if (!currentProject) {
-          const { data: newProject, error: createError } = await createV2Project({
-            name: 'My Studio Project',
-          })
-          
-          if (createError || !newProject) {
-            setError(createError || 'Failed to create project')
-            return
-          }
-          
-          currentProject = newProject
+          setError('Project not found')
+          return
         }
         
         setProject(currentProject)
         
-        // Load assets
+        // 2. Load assets for this project
         const { data: loadedAssets, error: assetsError } = await getV2Assets(currentProject.id)
         
         if (assetsError) {
@@ -76,7 +70,7 @@ export default function StudioPage() {
         
         setAssets(loadedAssets)
 
-        // Hydrate shots from latest script
+        // 3. Hydrate shots from latest script
         const latestScript = loadedAssets
             .filter(a => a.type === 'script')
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
@@ -93,13 +87,10 @@ export default function StudioPage() {
                      title: s.title || 'Untitled',
                      description: s.description,
                      assetIds: relatedAssetIds,
-                 }
+                  }
              })
              
              setShots(hydratedShots)
-        } else if (loadedAssets.length > 0) {
-            // Fallback: If no script but assets exist, maybe organize by shot_id found?
-            // For now, simpler: Just ensure unassigned assets are visible in "Unbound Assets"
         }
         
       } catch {
@@ -109,8 +100,10 @@ export default function StudioPage() {
       }
     }
     
-    initProject()
-  }, [initialized, setAssets, setProject, setIsLoadingAssets, setError, setShots])
+    if (projectId) {
+        initProject()
+    }
+  }, [initialized, projectId, setAssets, setProject, setIsLoadingAssets, setError, setShots])
 
   // Convert V2Asset to display format
   const displayAssets = assets.map(asset => ({
@@ -145,16 +138,31 @@ export default function StudioPage() {
         return !assetShotId
       })
 
+  // View Switching
+  const [viewMode, setViewMode] = useState<'assets' | 'generate' | 'edit'>('assets')
+  
+
+
   return (
     <>
     <StudioLayout
        vaultContent={<AssetBin onParse={() => setShowScriptModal(true)} />}
        assetsContent={<SidebarAssetList />}
-       cockpitContent={<CockpitPromptBar />}
+       cockpitContent={viewMode === 'assets' ? <CockpitPromptBar /> : null}
        contextContent={<ContextPanel />}
+       viewMode={viewMode}
+       onViewModeChange={setViewMode}
     >
         
-        {/* ZONE B: THE STREAM */}
+        {viewMode === 'generate' && (
+             <VideoGenerationView />
+        )}
+
+        {viewMode === 'edit' && (
+             <VideoEditorView />
+        )}
+
+        {viewMode === 'assets' && (
         <div className="py-6 px-5 pb-36">
             
             {/* Shot Filter Info */}
@@ -245,10 +253,12 @@ export default function StudioPage() {
             )}
 
         </div>
+        )}
 
     </StudioLayout>
 
     {/* Floating Script Parse Button */}
+    {viewMode === 'assets' && (
     <button
         onClick={() => setShowScriptModal(true)}
         className="fixed bottom-24 right-8 w-14 h-14 rounded-full bg-[#a3e635] hover:bg-[#bef264] text-black shadow-2xl shadow-[#a3e635]/30 hover:shadow-[#a3e635]/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-40 group"
@@ -256,6 +266,7 @@ export default function StudioPage() {
     >
         <FileText size={24} className="group-hover:scale-110 transition-transform" />
     </button>
+    )}
 
     {/* Script Parse Modal */}
     <ScriptParseModal 

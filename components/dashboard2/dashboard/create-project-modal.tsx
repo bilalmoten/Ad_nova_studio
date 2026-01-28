@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { Upload, Loader2, X, Image as ImageIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { createStudioProject } from '@/server/actions/studio/projects'
+// import { createStudioProject } from '@/server/actions/studio/projects'
 import { uploadImageAction } from '@/server/actions/studio/upload'
 
 interface CreateProjectModalProps {
@@ -131,15 +131,34 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
       }
     }
     
-    const result = await createStudioProject({
+    // Map inputs to V2 Project structure
+    const projectInputs = {
       name: formData.name || 'Untitled Project',
-      prompt: formData.prompt,
-      reference_image_url: referenceImageUrl,
-      visual_style: formData.visualStyle || undefined,
-      user_notes: formData.userNotes || undefined,
-      shot_count: formData.shotCount,
-      aspect_ratio: formData.aspectRatio,
-    })
+      description: formData.prompt,
+      settings: {
+        shot_count: formData.shotCount,
+        aspect_ratio: formData.aspectRatio as '16:9' | '9:16' | '1:1' | '4:3',
+        visual_style: formData.visualStyle,
+        user_notes: formData.userNotes,
+        reference_image_url: referenceImageUrl,
+        initial_prompt: formData.prompt,
+      },
+      // Create initial anchors from inputs
+      anchors: [
+         ...(formData.visualStyle ? [{
+             id: crypto.randomUUID(),
+             type: 'style' as const,
+             label: 'Visual Style',
+             value: formData.visualStyle,
+             is_active: true
+         }] : [])
+      ]
+    }
+
+    // Call V2 Action
+    // We import createV2Project dynamically or change import at top
+    const { createV2Project } = await import('@/server/actions/studio/v2-projects')
+    const result = await createV2Project(projectInputs)
     
     if (result.error) {
       toast({ title: 'Error creating project', description: result.error, variant: 'destructive' })
@@ -155,9 +174,9 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
     uploadedFiles.forEach(f => URL.revokeObjectURL(f.preview))
     setUploadedFiles([])
     
-    // Navigate to studio
+    // Navigate to studio (V2 route)
     if (result.data) {
-      router.push(`/dashboard2/studio/${result.data.id}`)
+      router.push(`/dashboard/studio/${result.data.id}`)
     }
   }
   

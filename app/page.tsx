@@ -44,7 +44,7 @@ export default async function Home() {
         
         <div className="flex gap-4 justify-center">
           {user ? (
-            <Link href="/dashboard2">
+            <Link href="/dashboard">
               <Button size="lg" className="gap-2 bg-indigo-600 hover:bg-indigo-700">
                 Go to Studio <ArrowRight className="w-4 h-4" />
               </Button>
