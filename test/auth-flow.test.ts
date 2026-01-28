@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { signUp, signIn, signOut } from '@/server/actions/auth'
 import { createClient } from '@/lib/supabase/server'
 
@@ -105,7 +105,7 @@ describe('Authentication Flow', () => {
         error: null,
       })
 
-      const result = await signOut()
+      const result = await signOut(new FormData())
 
       expect(mockSupabase.auth.signOut).toHaveBeenCalled()
       expect(result).toBeUndefined()

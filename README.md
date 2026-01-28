@@ -1,213 +1,70 @@
-# Next.js 15.3 + Supabase + TypeScript Starter
+# Ad Nova Studio
 
-A modern, production-ready starter template for building full-stack applications with Next.js 15.3, Supabase, TypeScript, and Tailwind CSS v4.
+**AI-Powered Video Advertising Platform**
+
+Ad Nova Studio is a sophisticated web application designed to streamline the creation of video advertisements using advanced AI technologies. It guides users through a structured workflow—from ideation and scripting to storyboard generation and final video production—leveraging the power of Google Gemini and generative video models.
+
+![Status](https://img.shields.io/badge/Status-Development-blue)
+![Stack](https://img.shields.io/badge/Stack-Next.js_|_Supabase_|_Tailwind-black)
 
 ## 🚀 Features
 
-- **Next.js 15.3** with App Router and Server Components
-- **Supabase** for authentication and database
-- **TypeScript** with strict mode for type safety
-- **Tailwind CSS v4** for modern styling
-- **shadcn/ui** component library
-- **Authentication** - Complete auth flow with sign up, sign in, and protected routes
-- **Database Migrations** - Migration-first development with type generation
-- **Vitest** for testing
-- **Zod** for schema validation
-- Pre-configured development tools (ESLint, Prettier)
+- **AI Ideation**: Generate ad concepts and scripts based on simple prompts and reference images.
+- **Visual Storyboarding**: Create scene-by-scene breakdowns with consistent character and style generation.
+- **Video Generation**: Transform static storyboards into dynamic video clips using state-of-the-art video models (e.g., Google Veo, OpenAI Sora).
+- **Pro Editor**: Integrated timeline features for trimming, stitching, and refining generated clips.
+- **Project Management**: Organize assets, scripts, and video generations in a unified workspace.
 
-## 📋 Prerequisites
+## 🛠 Tech Stack
 
-- Node.js 18+ 
-- npm/yarn/pnpm
-- Supabase CLI (`brew install supabase/tap/supabase`)
+- **Frontend**: [Next.js 15](https://nextjs.org/) (App Router), React 19, Tailwind CSS v4.
+- **Backend & Database**: [Supabase](https://supabase.com/) (Auth, PostgreSQL, Storage).
+- **AI Integration**:
+  - Google Gemini 1.5 Pro (Text/Multimodal)
+  - Google Veo / OpenAI Sora (Video Generation)
+- **State Management**: Zustand
+- **UI Components**: Radix UI, Lucide React
 
-## 🛠️ Getting Started
+## 📖 Documentation
 
-### 1. Clone and Install
+Detailed documentation for setup and troubleshooting can be found in the `docs/` directory:
 
-```bash
-git clone <your-repo-url>
-cd my-app
-npm install
-```
+- [**Setup Guide**](docs/SETUP.md): Instructions for installing dependencies, setting up environment variables, and running the local development server.
+- [**Troubleshooting**](docs/TROUBLESHOOTING.md): Solutions for common issues regarding API keys, database migrations, and storage.
+- [**Design Brief**](docs/Studio%202%20-%20UI%20design%20Brief.md): Overview of the UI/UX design philosophy and requirements.
 
-### 2. Set Up Supabase
+## ⚡️ Quick Start
 
-Start local Supabase development stack:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/bilalmoten/Ad_nova_studio.git
+    cd Ad_nova_studio
+    ```
 
-```bash
-npm run db:start
-```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-This will output your local Supabase credentials. Update `.env.local`:
+3.  **Set up environment variables:**
+    Copy `.env.example` to `.env.local` and populate the required keys (Supabase, Google GenAI).
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
 
-### 3. Run Development Server
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-npm run dev
-```
+## 📂 Project Structure
 
-Open [http://localhost:3000](http://localhost:3000) to see your app.
+- `app/` - Application routes and pages (Next.js App Router).
+- `components/` - Reusable UI components and feature-specific blocks.
+- `lib/` - Utility functions, AI clients, and constants.
+- `server/` - Server Actions and database queries.
+- `supabase/` - Database migrations and types.
+- `docs/` - Project documentation and reference materials.
 
-## 📁 Project Structure
+---
 
-```
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # Auth routes (signin, signup)
-│   ├── (dashboard)/       # Protected dashboard routes
-│   └── layout.tsx         # Root layout
-├── components/            
-│   ├── ui/                # shadcn/ui components
-│   └── features/          # Feature-specific components
-│       └── auth/          # Auth form components
-├── lib/
-│   ├── supabase/         # Supabase client configs
-│   ├── env.ts            # Environment validation
-│   └── utils.ts          # Utility functions
-├── server/
-│   ├── actions/          # Server Actions
-│   │   └── auth.ts       # Auth actions (signUp, signIn, signOut)
-│   └── queries/          # Database queries
-├── hooks/                # React hooks
-├── supabase/
-│   ├── migrations/       # Database migrations
-│   └── config.toml       # Supabase configuration
-├── types/                # TypeScript types
-│   └── supabase.ts       # Generated DB types
-└── middleware.ts         # Auth middleware
-```
-
-## 🔧 Available Scripts
-
-```bash
-# Development
-npm run dev              # Start dev server with Turbopack
-npm run build           # Build for production
-npm run start           # Start production server
-npm run lint            # Run ESLint
-
-# Database
-npm run db:start        # Start local Supabase
-npm run db:stop         # Stop local Supabase
-npm run db:reset        # Reset database
-npm run db:types        # Generate TypeScript types
-npm run db:push         # Push migrations to remote
-
-# Testing
-npm run test            # Run tests in watch mode
-npm run test:ui         # Open Vitest UI
-```
-
-## 🏗️ Development Workflow
-
-### Database Changes
-
-1. Create a migration:
-```bash
-supabase migration new create_posts_table
-```
-
-2. Apply locally and regenerate types:
-```bash
-npm run db:reset
-npm run db:types
-```
-
-### Adding UI Components
-
-```bash
-npx shadcn@latest add button card dialog
-```
-
-### Creating Features
-
-1. Use Server Components by default
-2. Add `'use client'` only when needed
-3. Separate server and client Supabase instances
-4. Use Server Actions for mutations
-
-## 🧪 Testing
-
-Write tests for:
-- Business logic in utilities and hooks
-- Server Actions with mocked Supabase
-- Component behavior (not visual appearance)
-- Error states and edge cases
-
-```bash
-npm run test
-```
-
-## 📚 Key Concepts
-
-### Server Components First
-
-```typescript
-// ✅ Server Component (default)
-export default async function Page() {
-  const data = await getServerData()
-  return <ClientComponent initialData={data} />
-}
-```
-
-### Supabase Client Separation
-
-```typescript
-// Client-side (browser)
-import { createClient } from '@/lib/supabase/client'
-
-// Server-side (Node.js)
-import { createClient } from '@/lib/supabase/server'
-```
-
-### Type-Safe Database Queries
-
-```typescript
-import type { Database } from '@/types/supabase'
-
-type Post = Database['public']['Tables']['posts']['Row']
-```
-
-### Authentication Flow
-
-The starter includes a complete auth setup:
-- Sign up/in pages at `/signup` and `/signin`
-- Protected routes under `(dashboard)`
-- Server actions for auth operations
-- Automatic profile creation on signup
-- Session management via middleware
-
-## 🚨 Important Guidelines
-
-1. **Always regenerate types** after schema changes
-2. **Use migrations** for all database changes
-3. **Enable RLS** on all tables
-4. **Validate environment variables** with Zod
-5. **Test business logic**, not implementation details
-
-## 📝 Environment Variables
-
-Required environment variables:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
-## 🤝 Contributing
-
-1. Create feature branch
-2. Make changes following the patterns in CLAUDE.md
-3. Write/update tests
-4. Submit PR
-
-## 📄 License
-
-MIT
+© 2026 Ad Nova Studio. All rights reserved.

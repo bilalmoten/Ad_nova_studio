@@ -1,0 +1,52 @@
+Here are three test scenarios designed to exercise the different capabilities of your new studio workflow (Visual Styles, Notes, Scenes, etc.).
+
+Option 1: The "Visual Style" Stress Test (Sci-Fi Product)
+This tests if the AI respects the specific "Visual Style" field and if the "Neon" aesthetic carries through from Concept -> Storyboard -> Video.
+
+Project Name: Volt Pulse Energy
+Description: A high-energy commercial for a new futuristic energy drink called "Volt Pulse". The video should show the drink glowing in a dark city, people gaming, and cybernetics.
+Visual Style: Cyberpunk, Neon Noir, High Contrast, Glitch effects, Purple and Cyan palette, 80s Synthwave aesthetic.
+Notes: The liquid inside the can must glow. Fast cuts. No slow motion.
+Duration: 15 seconds / 5 shots
+Option 2: The "Storyline" Flow Test (Cinematic Travel)
+This tests the narrative generation. We want to see if the Storyline generator creates a logical sequence (waking up -> traveling -> arriving) based on the description.
+
+Project Name: Escape to The Alps
+Description: A luxury travel ad for a winter resort in the Swiss Alps. We follow a couple escaping the busy city to find peace in the mountains.
+Visual Style: National Geographic style, majestic wide shots, warm sunlight on snow, cozy interior lighting, slow & peaceful camera movements.
+Notes: Start with stressful city sounds, then transition to silence of the mountains. Focus on the feeling of relief.
+Duration: 30 seconds / 6 shots.
+Option 3: The "Context" Test (Abstract/Conceptual)
+This tests if the "Notes" field effectively steers the AI away from generic stock footage tropes.
+
+Project Name: Mindful AI
+Description: An abstract commercial for an AI meditation app. Instead of showing people on phones, show abstract representations of peace and organized thoughts.
+Visual Style: Minimalist 3D render, soft pastel colors, floating geometric shapes, glass textures, dreamlike.
+Notes: Do NOT show any smartphones or technology devices. Focus entirely on abstract geometry calming down.
+Duration: 15 seconds / 4 shots.
+Recommended Test Path:
+
+Create Project: Use Option 1 to see the strongest visual impact.
+Concepts: See if the concepts suggest "Cyberpunk" themes.
+Studio:
+Generate the Storyline.
+Go to Timeline View.
+Edit a Scene: Change the description of Shot 2 manually.
+Regenerate Visuals: Click the "Image" button on Shot 2 to see if it generates consistent cyberpunk style images.
+Generate Video: Try generating the video for that shot.
+
+<!-- few more short ideas please, 2-3 shots -->
+
+Project Name: Mindful AI
+Description: An abstract commercial for an AI meditation app. Instead of showing people on phones, show abstract representations of peace and organized thoughts.
+Visual Style: Minimalist 3D render, soft pastel colors, floating geometric shapes, glass textures, dreamlike.
+Notes: Do NOT show any smartphones or technology devices. Focus entirely on abstract geometry calming down.
+Duration: 15 seconds / 4 shots.
+
+project name:       
+
+Description: A luxury travel ad for a winter resort in the Swiss Alps. We follow a couple escaping the busy city to find peace in the mountains.
+Visual Style: National Geographic style, majestic wide shots, warm sunlight on snow, cozy interior lighting, slow & peaceful camera movements.
+Notes: Start with stressful city sounds, then transition to silence of the mountains. Focus on the feeling of relief.
+Duration: 30 seconds / 6 shots.
+

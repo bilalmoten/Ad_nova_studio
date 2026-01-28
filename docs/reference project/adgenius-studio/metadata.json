@@ -1,0 +1,6 @@
+
+{
+  "name": "AdGenius Studio",
+  "description": "A high-end professional AI ad creation suite that handles everything from concept ideation to high-fidelity video production using the latest Gemini and Veo models.",
+  "requestFramePermissions": ["camera"]
+}

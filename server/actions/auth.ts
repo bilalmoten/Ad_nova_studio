@@ -52,13 +52,13 @@ export async function signIn(data: SignInData) {
   return { success: true }
 }
 
-export async function signOut() {
+export async function signOut(formData: FormData): Promise<void> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signOut()
 
   if (error) {
-    return { error: error.message }
+    throw new Error(error.message)
   }
 
   revalidatePath('/', 'layout')

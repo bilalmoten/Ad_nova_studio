@@ -6,6 +6,7 @@ import {
   ArrowRight, 
   Code2, 
   Database, 
+  Film,
   Layers, 
   Rocket, 
   Shield, 
@@ -26,39 +27,38 @@ export default async function Home() {
         <div className="flex justify-center mb-6">
           <Badge variant="secondary" className="px-4 py-1">
             <Sparkles className="w-3 h-3 mr-1" />
-            Next.js 15.3 + Supabase + TypeScript
+            Empowering the Next Generation of Advertisers
           </Badge>
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-          Build faster with
-          <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-            {" "}modern tools
+          Create Viral Ads with
+          <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+            {" "}AdNova AI
           </span>
         </h1>
         
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          A production-ready starter template with Next.js 15.3, Supabase, TypeScript, 
-          Tailwind CSS v4, and shadcn/ui components.
+          The all-in-one AI Video Studio. Transform your concepts into high-converting video ads in minutes, not days.
         </p>
         
         <div className="flex gap-4 justify-center">
           {user ? (
-            <Link href="/dashboard">
-              <Button size="lg" className="gap-2">
-                Go to Dashboard <ArrowRight className="w-4 h-4" />
+            <Link href="/dashboard2">
+              <Button size="lg" className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                Go to Studio <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           ) : (
             <>
               <Link href="/signin">
-                <Button size="lg" className="gap-2">
-                  Get Started <ArrowRight className="w-4 h-4" />
+                <Button size="lg" className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                  Start Creating <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <Link href="/signup">
                 <Button size="lg" variant="outline">
-                  Create Account
+                  View Templates
                 </Button>
               </Link>
             </>
@@ -68,65 +68,53 @@ export default async function Home() {
 
       {/* Features Grid */}
       <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">Everything you need</h2>
+        <h2 className="text-3xl font-bold text-center mb-12">The Future of Ad Creation</h2>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/20 flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-indigo-600" />
+              </div>
+              <CardTitle>AI Concept Engine</CardTitle>
+              <CardDescription>
+                Turn simple text prompts into high-impact advertising concepts automatically.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-lg bg-violet-100 dark:bg-violet-900/20 flex items-center justify-center mb-4">
+                <Layers className="w-6 h-6 text-violet-600" />
+              </div>
+              <CardTitle>Smart Storyboarding</CardTitle>
+              <CardDescription>
+                Visualize your ad shot-by-shot with AI-generated storyboards and scene descriptions.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-lg bg-fuchsia-100 dark:bg-fuchsia-900/20 flex items-center justify-center mb-4">
+                <Film className="w-6 h-6 text-fuchsia-600" />
+              </div>
+              <CardTitle>One-Click Production</CardTitle>
+              <CardDescription>
+                Go from storyboard to final video with cinematic AI generation and smooth transitions.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
           <Card>
             <CardHeader>
               <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-blue-600" />
               </div>
-              <CardTitle>Next.js 15.3</CardTitle>
+              <CardTitle>Instant Iteration</CardTitle>
               <CardDescription>
-                Latest App Router with Server Components, Server Actions, and streaming
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
-                <Database className="w-6 h-6 text-green-600" />
-              </div>
-              <CardTitle>Supabase</CardTitle>
-              <CardDescription>
-                PostgreSQL database with real-time subscriptions and Row Level Security
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mb-4">
-                <Code2 className="w-6 h-6 text-purple-600" />
-              </div>
-              <CardTitle>TypeScript</CardTitle>
-              <CardDescription>
-                Full type safety with generated Supabase types and strict mode
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mb-4">
-                <Layers className="w-6 h-6 text-orange-600" />
-              </div>
-              <CardTitle>Tailwind CSS v4</CardTitle>
-              <CardDescription>
-                Modern CSS with design tokens and no configuration needed
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-pink-600" />
-              </div>
-              <CardTitle>Authentication</CardTitle>
-              <CardDescription>
-                Built-in auth with protected routes and middleware setup
+                Swap shots, refine prompts, and adjust concepts in real-time until it's perfect.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -136,9 +124,21 @@ export default async function Home() {
               <div className="w-12 h-12 rounded-lg bg-cyan-100 dark:bg-cyan-900/20 flex items-center justify-center mb-4">
                 <Rocket className="w-6 h-6 text-cyan-600" />
               </div>
-              <CardTitle>Production Ready</CardTitle>
+              <CardTitle>Professional Exports</CardTitle>
               <CardDescription>
-                Testing with Vitest, error handling, and deployment configs
+                Download your ads in high resolution, ready for YouTube, TikTok, or Instagram.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="w-12 h-12 rounded-lg bg-rose-100 dark:bg-rose-900/20 flex items-center justify-center mb-4">
+                <Shield className="w-6 h-6 text-rose-600" />
+              </div>
+              <CardTitle>Enterprise Security</CardTitle>
+              <CardDescription>
+                Your data and assets are protected with industry-leading encryption and RLS.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -255,28 +255,28 @@ export async function getPosts() {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-24">
-        <Card className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-0">
+        <Card className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-0">
           <CardContent className="text-center py-12">
-            <h2 className="text-3xl font-bold mb-4">Ready to build?</h2>
-            <p className="text-xl mb-8 text-blue-50">
-              Start your next project with this production-ready starter
+            <h2 className="text-3xl font-bold mb-4">Ready to launch your next campaign?</h2>
+            <p className="text-xl mb-8 text-indigo-50">
+              Join thousands of creators using AdNova to scale their video production.
             </p>
             <div className="flex gap-4 justify-center">
               {user ? (
                 <Link href="/dashboard">
                   <Button size="lg" variant="secondary" className="gap-2">
-                    Go to Dashboard <ArrowRight className="w-4 h-4" />
+                    Open Studio <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
               ) : (
                 <Link href="/signin">
                   <Button size="lg" variant="secondary" className="gap-2">
-                    Get Started <ArrowRight className="w-4 h-4" />
+                    Get Started Now <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
               )}
               <Button size="lg" variant="ghost" className="text-white hover:text-white hover:bg-white/20">
-                Read Documentation
+                Contact Sales
               </Button>
             </div>
           </CardContent>
