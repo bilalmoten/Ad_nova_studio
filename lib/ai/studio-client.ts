@@ -6,7 +6,7 @@
 // ============================================
 
 import { GoogleGenAI, Part } from '@google/genai'
-import { OpenAI } from 'openai'
+
 import { AzureOpenAI } from 'openai'
 
 // =====================

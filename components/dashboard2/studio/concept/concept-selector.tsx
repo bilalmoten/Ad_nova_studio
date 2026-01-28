@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 export function ConceptSelector() {
   const { currentProject } = useStudioStore()
-  const { toast } = useToast()
+  // const { toast } = useToast()
   const projectId = currentProject?.id || ''
   
   const { concepts, isGenerating, generate, select } = useConcepts(projectId)

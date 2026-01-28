@@ -15,7 +15,7 @@ import {
   Wand2
 } from "lucide-react"
 import { useStudioStore } from "@/lib/studio/store"
-import { toggleV2AssetFavorite, archiveV2Asset } from "@/server/actions/studio/v2-assets"
+import { toggleV2AssetFavorite } from "@/server/actions/studio/v2-assets"
 import { createV2Variation } from "@/server/actions/studio/v2-generate"
 
 interface AssetCardProps {
@@ -37,8 +37,7 @@ export function AssetCard({ asset }: AssetCardProps) {
     hoveredAssetId, 
     setHoveredAssetId, 
     setActiveAssetId, 
-    updateAsset, 
-    removeAsset, 
+    updateAsset,
     setError,
     addReferenceImage,
     updateGenerationSettings,
@@ -77,31 +76,14 @@ export function AssetCard({ asset }: AssetCardProps) {
       } else if (data) {
         updateAsset(asset.id, { is_favorite: data.is_favorite } as any)
       }
-    } catch (err) {
+    } catch {
       setError('Failed to update')
     } finally {
       setIsUpdating(false)
     }
   }
 
-  const handleArchive = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (isUpdating) return
-    
-    setIsUpdating(true)
-    try {
-      const { data, error } = await archiveV2Asset(asset.id)
-      if (error) {
-        setError(error)
-      } else {
-        removeAsset(asset.id)
-      }
-    } catch (err) {
-      setError('Failed to archive')
-    } finally {
-      setIsUpdating(false)
-    }
-  }
+
 
   const handleCopyPrompt = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -125,7 +107,7 @@ export function AssetCard({ asset }: AssetCardProps) {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } catch (err) {
+    } catch {
       setError('Download failed')
     }
   }
@@ -223,13 +205,13 @@ export function AssetCard({ asset }: AssetCardProps) {
     
     setIsUpdating(true)
     try {
-      const { data, error } = await createV2Variation(asset.id, asset.prompt)
+      const { error } = await createV2Variation(asset.id, asset.prompt)
       if (error) {
         setError(error)
-      } else if (data) {
+      } else {
         // Asset will be added via generation flow
       }
-    } catch (err) {
+    } catch {
       setError('Failed to create variation')
     } finally {
       setIsUpdating(false)

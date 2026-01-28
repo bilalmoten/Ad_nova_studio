@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Sparkles, Image as ImageIcon, Video, Check, X, Copy, Download, Key, Server as ServerIcon, Globe } from 'lucide-react'
+import { Loader2, Sparkles, Image as ImageIcon, Video, Check, X, Copy, Download, Server as ServerIcon, Globe } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 type TestType = 'text' | 'image' | 'video'

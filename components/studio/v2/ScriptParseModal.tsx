@@ -208,7 +208,7 @@ export function ScriptParseModal({ isOpen, onClose }: ScriptParseModalProps) {
                                 {videoFrames.length > 0 ? (
                                     <div className="grid grid-cols-2 gap-1 w-full h-full opacity-60">
                                         {videoFrames.slice(0, 4).map((f, i) => (
-                                            <img key={i} src={`data:image/jpeg;base64,${f}`} className="w-full h-full object-cover" />
+                                            <img key={i} src={`data:image/jpeg;base64,${f}`} className="w-full h-full object-cover" alt={`Frame ${i + 1}`} />
                                         ))}
                                     </div>
                                 ) : (

@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { 
-  ChevronUp, 
   ChevronDown,
   Sparkles,
   Sun,
@@ -11,16 +10,14 @@ import {
   Expand,
   Video,
   Image as ImageIcon,
-  FileText,
   X,
   Hash,
-  ChevronDown as ChevronDownIcon,
   Loader2
 } from "lucide-react"
 import { useStudioStore } from "@/lib/studio/store"
 import { generateV2Image, generateV2Video } from "@/server/actions/studio/v2-generate"
 import { uploadTempImage } from "@/server/actions/studio/v2-upload"
-import type { V2Asset } from "@/lib/studio/v2-types"
+// import type { V2Asset } from "@/lib/studio/v2-types"
 
 export function CockpitPromptBar() {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -33,7 +30,7 @@ export function CockpitPromptBar() {
   
   const { 
     activeShotId,
-    shots,
+    // shots,
     isGenerating, 
     setIsGenerating,
     projectId,
@@ -104,8 +101,8 @@ export function CockpitPromptBar() {
         }
       })
       
-    } catch (err) {
-      console.error('Generation error:', err)
+    } catch {
+      console.error('Generation error')
       setError('Generation failed')
     } finally {
       setIsGenerating(false)
@@ -128,8 +125,8 @@ export function CockpitPromptBar() {
       } else {
         addReferenceImage(url)
       }
-    } catch (err) {
-      console.error('Upload error:', err)
+    } catch {
+      console.error('Upload error')
       setError('Upload failed')
     } finally {
       setIsUploading(false)
@@ -257,7 +254,7 @@ export function CockpitPromptBar() {
                         }
                     }
                 }
-            } catch (err) {
+            } catch {
                 // Ignore non-JSON drops
             }
         }}

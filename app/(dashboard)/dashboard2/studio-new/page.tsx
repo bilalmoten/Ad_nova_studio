@@ -10,7 +10,7 @@ import { ContextPanel } from "@/components/studio/v2/ContextPanel"
 import { useStudioStore } from "@/lib/studio/store"
 import { getV2Assets } from "@/server/actions/studio/v2-assets"
 import { createV2Project, getV2Projects } from "@/server/actions/studio/v2-projects"
-import type { V2Asset } from "@/lib/studio/v2-types"
+// import type { V2Asset } from "@/lib/studio/v2-types"
 import { FileText } from "lucide-react"
 import { SidebarAssetList } from "@/components/studio/v2/SidebarAssetList"
 
@@ -21,7 +21,7 @@ export default function StudioPage() {
     isGenerating, 
     isLoadingAssets,
     setIsLoadingAssets,
-    projectId,
+    // projectId,
     setProject,
     error,
     setError,
@@ -102,8 +102,7 @@ export default function StudioPage() {
             // For now, simpler: Just ensure unassigned assets are visible in "Unbound Assets"
         }
         
-      } catch (err) {
-        console.error('Failed to initialize studio:', err)
+      } catch {
         setError('Failed to initialize studio')
       } finally {
         setIsLoadingAssets(false)

@@ -25,10 +25,10 @@ interface StudioLayoutProps {
   assetsContent?: React.ReactNode
 }
 
-export function StudioLayout({ children, vaultContent, cockpitContent, contextContent, assetsContent }: StudioLayoutProps) {
+export function StudioLayout({ children, vaultContent, cockpitContent, assetsContent }: StudioLayoutProps) {
   const [isVaultOpen, setIsVaultOpen] = useState(true)
   const [activeVaultTab, setActiveVaultTab] = useState<'assets' | 'scripts'>('scripts')
-  const [gridCols, setGridCols] = useState(4)
+  const [gridCols] = useState(4)
 
   return (
     <div className="flex h-screen w-full bg-zinc-950 text-zinc-100 overflow-hidden font-sans selection:bg-[#a3e635] selection:text-black">

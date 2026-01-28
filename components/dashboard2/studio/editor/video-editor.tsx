@@ -17,7 +17,6 @@ import {
   Scissors, 
   Gauge,
   GripVertical,
-  Trash2,
   Check,
   Film,
   ChevronLeft
@@ -39,7 +38,7 @@ export function VideoEditor() {
     currentTime,
     currentClipIndex,
     totalDuration,
-    play,
+    // play,
     pause,
     togglePlayback,
     seekTo,
@@ -81,18 +80,7 @@ export function VideoEditor() {
     }
   }
   
-  // Calculate clip start time on timeline
-  const getClipStartTime = (index: number) => {
-    let time = 0
-    for (let i = 0; i < index; i++) {
-      const shot = clips[i]
-      const settings = clipSettings[shot.id]
-      const baseDuration = shot.video?.duration_seconds || 6
-      const trimmedDuration = baseDuration - (settings?.trimStart || 0) - (settings?.trimEnd || 0)
-      time += trimmedDuration / (settings?.speed || 1)
-    }
-    return time
-  }
+
   
   // Calculate clip duration for display
   const getClipDuration = (shot: typeof clips[0]) => {

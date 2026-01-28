@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect } from 'react'
+import { use } from 'react'
 import { useStudioStore } from '@/lib/dashboard2/store'
 import { useProject } from '@/lib/dashboard2/hooks'
 import { StudioLayout } from '@/components/dashboard2/studio/studio-layout'

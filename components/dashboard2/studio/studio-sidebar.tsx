@@ -2,7 +2,7 @@
 
 import { useStudioStore } from '@/lib/dashboard2/store'
 import { WorkflowStep } from '@/lib/studio/types'
-import { Check, Circle } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getGradientFromId } from '@/lib/dashboard2/utils'
 

@@ -717,7 +717,7 @@ export function useVideoEditor(projectId: string) {
                 }
             }
             toast({ title: 'Videos ready', description: 'Videos opened in new tabs for download' })
-        } catch (error) {
+        } catch {
             toast({ title: 'Export failed', description: 'Could not export videos', variant: 'destructive' })
         }
     }, [clips, toast])

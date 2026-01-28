@@ -20,7 +20,7 @@ export async function uploadImage(
 
   // Upload to Supabase Storage
   const storagePath = `projects/${projectId}/images/${filename}`;
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from('assets')
     .upload(storagePath, buffer, {
       contentType: 'image/png',

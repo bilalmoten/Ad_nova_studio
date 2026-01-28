@@ -34,7 +34,7 @@ export async function uploadVideo(
 
   // Upload to Supabase Storage
   const storagePath = `projects/${projectId}/videos/${filename}`;
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from('assets')
     .upload(storagePath, buffer, {
       contentType: 'video/mp4',

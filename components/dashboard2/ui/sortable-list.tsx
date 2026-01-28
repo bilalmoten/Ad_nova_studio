@@ -14,7 +14,7 @@ export function SortableItem({ value, children, className, as }: SortableItemPro
   const Component = as || 'div'
 
   return (
-    <Reorder.Item value={value} dragListener={false} dragControls={controls} as="div">
+    <Reorder.Item value={value} dragListener={false} dragControls={controls} as={Component}>
       <div className={cn("relative touch-none", className)}>
         {/* Drag Handle passed to children via context or prop if needed, 
             but for simplicity we assume children will include a drag handle triggering `controls` 

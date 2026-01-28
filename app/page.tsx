@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowRight, 
   Code2, 
-  Database, 
+ 
   Film,
   Layers, 
   Rocket, 

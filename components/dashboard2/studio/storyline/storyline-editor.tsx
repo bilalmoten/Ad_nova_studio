@@ -81,7 +81,7 @@ export function StorylineEditor() {
       <div className="flex flex-col items-center justify-center h-full text-center p-12">
         <Loader2 className="w-12 h-12 animate-spin text-purple-500 mb-4" />
         <h3 className="text-xl font-semibold">Generating Storyline...</h3>
-        <p className="text-muted-foreground mt-2">AI is creating your video's shot-by-shot narrative</p>
+        <p className="text-muted-foreground mt-2">AI is creating your video&apos;s shot-by-shot narrative</p>
       </div>
     )
   }

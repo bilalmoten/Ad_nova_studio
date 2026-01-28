@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { V2Asset, V2Project, GenerateImageOptions } from './v2-types'
+import type { V2Asset, V2Project } from './v2-types'
 
 // ============================================
 // Studio V2 Zustand Store

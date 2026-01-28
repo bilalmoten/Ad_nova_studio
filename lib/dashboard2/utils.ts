@@ -3,7 +3,7 @@
 /**
  * Simulates AI processing with realistic delays
  */
-export async function simulateAI<T>(data: T, options?: { minDelay?: number; maxDelay?: number }): Promise<T> {
+export async function simulateAI<T>(data: T): Promise<T> {
     // Return immediately or with a tiny tick to allow UI updates, but effectively instant as requested
     return new Promise((resolve) => {
         setTimeout(() => resolve(data), 100)

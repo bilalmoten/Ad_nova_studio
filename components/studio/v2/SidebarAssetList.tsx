@@ -1,8 +1,8 @@
 "use client"
 
 import { useStudioStore } from "@/lib/studio/store"
-import { cn } from "@/lib/utils"
-import { Image as ImageIcon, Video, MoreHorizontal, Copy } from "lucide-react"
+
+import { Image as ImageIcon, Video } from "lucide-react"
 
 export function SidebarAssetList() {
     const { assets } = useStudioStore()
