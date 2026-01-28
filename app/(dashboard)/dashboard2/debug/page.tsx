@@ -369,7 +369,7 @@ export default function DebugPage() {
                         variant="secondary"
                         size="sm"
                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => downloadVideo(result.video?.isUrl ? result.video.url! : result.video?.dataUrl!)}
+                        onClick={() => downloadVideo(result.video?.isUrl ? result.video.url! : (result.video?.dataUrl || ''))}
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Download

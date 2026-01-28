@@ -114,7 +114,7 @@ export default async function Home() {
               </div>
               <CardTitle>Instant Iteration</CardTitle>
               <CardDescription>
-                Swap shots, refine prompts, and adjust concepts in real-time until it's perfect.
+                Swap shots, refine prompts, and adjust concepts in real-time until it&apos;s perfect.
               </CardDescription>
             </CardHeader>
           </Card>

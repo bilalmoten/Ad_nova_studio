@@ -111,7 +111,7 @@ export default function StudioPage() {
     }
     
     initProject()
-  }, [initialized, setAssets, setProject, setIsLoadingAssets, setError])
+  }, [initialized, setAssets, setProject, setIsLoadingAssets, setError, setShots])
 
   // Convert V2Asset to display format
   const displayAssets = assets.map(asset => ({

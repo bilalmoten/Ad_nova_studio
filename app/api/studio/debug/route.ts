@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
             if (result.success && result.data) {
                 // Handle response - could be base64 or URL
-                let videoData: any = { isUrl: !!result.data.videoUrl }
+                const videoData: any = { isUrl: !!result.data.videoUrl }
 
                 if (result.data.videoUrl) {
                     videoData.url = result.data.videoUrl
