@@ -71,8 +71,11 @@ export interface ImageGenerationInput {
     negativePrompt?: string
     referenceImages?: ImageInput[]
     aspectRatio?: '16:9' | '9:16' | '1:1' | '4:5'
+    width?: number
+    height?: number
     numberOfImages?: number
     model?: string
+    quality?: 'standard' | 'hd'
     azureConfig?: AzureConfig
 }
 
@@ -285,30 +288,82 @@ class StudioAIClient {
                     throw new Error('Azure endpoint and API key are required (via inputs or env vars)')
                 }
 
-                // Build URL (matching curl structure - NO api-version)
+                // Match curl structure
                 let baseUrl = endpoint.replace(/\/+$/, '')
                 if (!baseUrl.includes('/openai/v1')) {
                     baseUrl = baseUrl + '/openai/v1'
                 }
-                const url = `${baseUrl}/images/generations`
 
-                console.log('[GPT-Image] Generating with:', { url, model, promptLen: input.prompt.length })
+                const defaultUrl = `${baseUrl}/images/generations`
 
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
+                let targetUrl = defaultUrl
+                let body: any
+                const headers: any = {
+                    'Authorization': `Bearer ${apiKey}`
+                }
+
+                // ---------------------------------------------------------
+                // GPT-Image-1.5 Native Image Editing
+                // ---------------------------------------------------------
+                // Determine valid DALL-E 3 size based on input width/height/aspectRatio
+                // DALL-E 3 only supports: 1024x1024, 1024x1792, 1792x1024
+                let size = '1024x1024'
+                if (input.width && input.height) {
+                    const ratio = input.width / input.height
+                    if (ratio > 1.5) size = '1792x1024' // Wide
+                    else if (ratio < 0.7) size = '1024x1792' // Tall
+                    else size = '1024x1024' // Square
+                } else if (input.aspectRatio) {
+                    if (input.aspectRatio === '16:9') size = '1792x1024'
+                    else if (input.aspectRatio === '9:16') size = '1024x1792'
+                    else size = '1024x1024'
+                }
+
+                const quality = input.quality || 'standard'
+
+                // ---------------------------------------------------------
+                // GPT-Image-1.5 Native Image Editing
+                // ---------------------------------------------------------
+                if (input.referenceImages && input.referenceImages.length > 0) {
+                    targetUrl = `${baseUrl}/images/edits`
+
+                    const formData = new FormData()
+                    formData.append('prompt', input.prompt)
+                    formData.append('model', 'gpt-image-1.5')
+                    formData.append('n', (input.numberOfImages || 1).toString())
+                    formData.append('size', '1024x1024')
+                    // Note: Edits endpoint generally requires square 1024x1024 or same size as input
+                    // For now, let's stick to 1024x1024 for edits validation to be safe
+
+                    // Support multiple reference images
+                    input.referenceImages.forEach((refImg, index) => {
+                        const buffer = Buffer.from(refImg.base64, 'base64')
+                        const blob = new Blob([buffer], { type: refImg.mimeType })
+                        if (index === 0) formData.append('image', blob, `reference-${index}.png`)
+                    })
+
+                    body = formData
+                    console.log(`[GPT-Image] Using native image edit endpoint with ${input.referenceImages.length} references:`, targetUrl)
+                } else {
+                    headers['Content-Type'] = 'application/json'
+                    body = JSON.stringify({
                         prompt: input.prompt,
-                        model: 'gpt-image-1.5',  // Updated model version
-                        size: '1024x1024',
-                        quality: 'medium',
+                        model: 'gpt-image-1.5',
+                        size: size,
+                        quality: quality,
                         output_compression: 100,
                         output_format: 'png',
-                        n: 1
+                        n: input.numberOfImages || 1
                     })
+                    console.log('[GPT-Image] Using text-to-image endpoint:', targetUrl, { size, quality })
+                }
+
+                console.log('[GPT-Image] Generating with:', { url: targetUrl, model, promptLen: input.prompt.length })
+
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers,
+                    body
                 })
 
                 if (!response.ok) {

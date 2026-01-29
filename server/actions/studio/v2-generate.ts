@@ -18,7 +18,7 @@ import type {
 } from '@/lib/studio/v2-types'
 
 interface GenerationResult {
-    data?: V2Asset
+    data?: V2Asset[] // Changed to array
     error?: string
 }
 
@@ -49,49 +49,68 @@ export async function generateV2Image(
             return { error: 'Project not found' }
         }
 
-        // Create placeholder asset with processing status
-        const { data: placeholderAsset, error: insertError } = await supabase
-            .from('v2_assets')
-            .insert({
-                project_id: projectId,
-                type: 'image',
-                status: 'processing',
-                metadata: {
-                    prompt: options.prompt,
-                    negative_prompt: options.negative_prompt,
-                    width: options.width || 1920,
-                    height: options.height || 1080,
-                    seed: options.seed,
-                    model: options.model || 'flux',
-                    anchors_used: options.anchors,
-                    shot_id: options.shot_id,
-                },
-                is_temporary: true,
-            })
-            .select()
-            .single()
+        const count = options.count || 1;
+        const placeholders: V2Asset[] = [];
 
-        if (insertError) {
-            console.error('Error creating placeholder asset:', insertError)
-            return { error: 'Failed to create asset' }
+        // Create placeholder assets with processing status
+        // We do this concurrently
+        await Promise.all(Array.from({ length: count }).map(async () => {
+            const { data: placeholderAsset, error: insertError } = await supabase
+                .from('v2_assets')
+                .insert({
+                    project_id: projectId,
+                    type: 'image',
+                    status: 'processing',
+                    metadata: {
+                        prompt: options.prompt,
+                        negative_prompt: options.negative_prompt,
+                        width: options.width || 1920,
+                        height: options.height || 1080,
+                        seed: options.seed,
+                        model: options.model || 'flux',
+                        anchors_used: options.anchors,
+                        shot_id: options.shot_id,
+                    },
+                    is_temporary: true,
+                })
+                .select()
+                .single()
+
+            if (!insertError && placeholderAsset) {
+                placeholders.push(placeholderAsset as V2Asset)
+            }
+        }));
+
+        if (placeholders.length === 0) {
+            return { error: 'Failed to create assets' }
         }
 
         // Prepare reference images
         const referenceImages: ImageInput[] = []
-        if (options.reference_url) {
-            try {
-                const response = await fetch(options.reference_url)
-                const arrayBuffer = await response.arrayBuffer()
-                const base64 = Buffer.from(arrayBuffer).toString('base64')
-                const mimeType = response.headers.get('content-type') || 'image/jpeg'
+        if (options.reference_urls && options.reference_urls.length > 0) {
+            console.log(`[Generate] Fetching ${options.reference_urls.length} reference images`)
 
-                referenceImages.push({
-                    base64,
-                    mimeType: mimeType as ImageInput['mimeType'],
-                })
-            } catch (err) {
-                console.warn('Could not fetch reference image:', err)
-            }
+            await Promise.all(options.reference_urls.map(async (url) => {
+                try {
+                    const response = await fetch(url)
+
+                    if (!response.ok) {
+                        console.error('[Generate] Failed to fetch reference image:', url, response.status)
+                        return
+                    }
+
+                    const arrayBuffer = await response.arrayBuffer()
+                    const base64 = Buffer.from(arrayBuffer).toString('base64')
+                    const mimeType = response.headers.get('content-type') || 'image/jpeg'
+
+                    referenceImages.push({
+                        base64,
+                        mimeType: mimeType as ImageInput['mimeType'],
+                    })
+                } catch (err) {
+                    console.warn('Could not fetch reference image:', url, err)
+                }
+            }))
         }
 
         // Apply anchors to prompt
@@ -120,58 +139,83 @@ export async function generateV2Image(
         const useAzure = options.model === 'azure' || (options.model === undefined && !!azureConfig)
         const modelToUse = useAzure ? 'gpt-image-1' : undefined
 
-        // Generate image
+        // Determine quality based on resolution or passed option
+        // If width > 1024 or height > 1024, prefer HD
+        const isHD = (options.width || 0) > 1024 || (options.height || 0) > 1024
+
+        // Generate image(s)
+        // Pass count here!
         const result = await studioAI.generateImage({
             prompt: enhancedPrompt,
             negativePrompt: options.negative_prompt,
             referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
             aspectRatio: getAspectRatio(options.width, options.height) as any,
-            numberOfImages: 1,
+            width: options.width,
+            height: options.height,
+            quality: isHD ? 'hd' : 'standard',
+            numberOfImages: count, // Use input count
             model: modelToUse,
             azureConfig: useAzure ? azureConfig : undefined,
         })
 
         if (!result.success || !result.data?.images.length) {
-            // Update asset with error
-            await supabase
-                .from('v2_assets')
-                .update({
-                    status: 'failed',
-                    error_message: result.error || 'Generation failed',
-                })
-                .eq('id', placeholderAsset.id)
+            // Update all placeholders with error
+            await Promise.all(placeholders.map(p =>
+                supabase
+                    .from('v2_assets')
+                    .update({
+                        status: 'failed',
+                        error_message: result.error || 'Generation failed',
+                    })
+                    .eq('id', p.id)
+            ));
 
             return { error: result.error || 'Failed to generate image' }
         }
 
-        // Upload to storage
-        const filename = `v2_${Date.now()}.png`
-        const mediaUrl = await uploadImage(projectId, result.data.images[0].base64, filename)
+        // Match results to placeholders
+        // If we got fewer images than requested, we fail the excess placeholders
+        // If we got more, we ignore the extras (shouldn't happen with correct API usage)
 
-        // Update asset with result
-        const { data: updatedAsset, error: updateError } = await supabase
-            .from('v2_assets')
-            .update({
-                media_url: mediaUrl,
-                status: 'ready',
-                metadata: {
-                    ...placeholderAsset.metadata,
-                    model: result.model,
-                    seed: options.seed,
-                    reference_url: options.reference_url,
-                },
-            })
-            .eq('id', placeholderAsset.id)
-            .select()
-            .single()
+        const finalAssets: V2Asset[] = []
 
-        if (updateError) {
-            console.error('Error updating asset:', updateError)
-            return { error: 'Failed to save generated image' }
-        }
+        await Promise.all(placeholders.map(async (placeholder, idx) => {
+            const generatedImage = result.data?.images[idx]
+
+            if (!generatedImage) {
+                // Mark as failed if no corresponding image
+                await supabase.from('v2_assets').update({ status: 'failed', error_message: 'Image not generated' }).eq('id', placeholder.id)
+                return
+            }
+
+            // Upload to storage
+            const filename = `v2_${Date.now()}_${idx}.png`
+            const mediaUrl = await uploadImage(projectId, generatedImage.base64, filename)
+
+            // Update asset with result
+            const { data: updatedAsset, error: updateError } = await supabase
+                .from('v2_assets')
+                .update({
+                    media_url: mediaUrl,
+                    status: 'ready',
+                    metadata: {
+                        ...placeholder.metadata,
+                        model: result.model,
+                        seed: options.seed,
+                        reference_urls: options.reference_urls,
+                    },
+                })
+                .eq('id', placeholder.id)
+                .select()
+                .single()
+
+            if (!updateError && updatedAsset) {
+                finalAssets.push(updatedAsset as V2Asset)
+            }
+        }))
 
         revalidatePath('/dashboard2/studio-new')
-        return { data: updatedAsset as V2Asset }
+        return { data: finalAssets }
 
     } catch (error) {
         console.error('Error generating V2 image:', error)
@@ -331,7 +375,7 @@ export async function generateV2Video(
         }
 
         revalidatePath('/dashboard2/studio-new')
-        return { data: updatedAsset as V2Asset }
+        return { data: [updatedAsset as V2Asset] }
 
     } catch (error) {
         console.error('Error generating V2 video:', error)
@@ -367,17 +411,26 @@ export async function createV2Variation(
             // Generate variation using parent as reference
             const result = await generateV2Image(parentAsset.project_id, {
                 prompt,
-                reference_url: parentAsset.media_url || undefined,
+                reference_urls: parentAsset.media_url ? [parentAsset.media_url] : undefined,
                 width: metadata?.width,
                 height: metadata?.height,
             })
 
-            if (result.data) {
-                // Update parent_id to link lineage
+            if (result.data && result.data.length > 0) {
+                // Update parent_id to link lineage for the first generated variation
+                // (Usually variation is 1:1, but if we supported batch variation, we'd loop)
+                const newAsset = result.data[0]
                 await supabase
                     .from('v2_assets')
                     .update({ parent_id: assetId })
-                    .eq('id', result.data.id)
+                    .eq('id', newAsset.id)
+
+                // Return single result format for compatibility if needed, 
+                // or we update the return type of createV2Variation too.
+                // The interface GenerationResult is defined locally in this file AND used by createV2Variation.
+                // So createV2Variation signature implicitly returns the NEW GenerationResult (Array).
+                // But we should probably just return the whole result.
+                return result
             }
 
             return result

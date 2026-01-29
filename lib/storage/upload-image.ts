@@ -21,7 +21,7 @@ export async function uploadImage(
   // Upload to Supabase Storage
   const storagePath = `projects/${projectId}/images/${filename}`;
   const { error } = await supabase.storage
-    .from('assets')
+    .from('v2_assets')
     .upload(storagePath, buffer, {
       contentType: 'image/png',
       upsert: true,
@@ -31,13 +31,9 @@ export async function uploadImage(
     throw new Error(`Failed to upload image: ${error.message}`);
   }
 
-  // Get signed URL (bucket is private with RLS)
-  const signedUrlResult = await supabase.storage.from('assets').createSignedUrl(storagePath, 3600); // 1 hour expiry
+  // Get public URL (bucket is public)
+  const { data } = supabase.storage.from('v2_assets').getPublicUrl(storagePath);
 
-  if (!signedUrlResult.data?.signedUrl) {
-    throw new Error('Failed to generate signed URL');
-  }
-
-  return signedUrlResult.data.signedUrl;
+  return data.publicUrl;
 }
 

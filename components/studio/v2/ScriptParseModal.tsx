@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 // Imports below are correct
 import { parseScriptWithLLM, analyzeVideoWithLLM } from "@/server/actions/studio/v2-llm"
@@ -17,7 +17,13 @@ export function ScriptParseModal({ isOpen, onClose }: ScriptParseModalProps) {
     const [isParsing, setIsParsing] = useState(false)
     const [mode, setMode] = useState<'text' | 'video'>('text')
     const [videoFrames, setVideoFrames] = useState<string[]>([])
-    const { setShots, setError, projectId } = useStudioStore()
+    const { setShots, setError, projectId, project } = useStudioStore()
+
+    useEffect(() => {
+        if (isOpen && project?.settings?.initial_prompt && !scriptText) {
+            setScriptText(project.settings.initial_prompt)
+        }
+    }, [isOpen, project, scriptText])
 
     const extractFrames = async (file: File): Promise<string[]> => {
         return new Promise((resolve) => {

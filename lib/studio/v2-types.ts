@@ -95,6 +95,7 @@ export interface V2AssetMetadata {
     lighting?: string
     anchors_used?: string[] // IDs of anchors applied
     shot_id?: string // If bound to a shot
+    is_upload?: boolean // Whether the asset was uploaded manually
 }
 
 /**
@@ -209,9 +210,11 @@ export interface GenerateImageOptions {
     height?: number
     seed?: number
     model?: string
-    reference_url?: string
+    reference_urls?: string[] // Array of reference image URLs
     anchors?: string[] // Anchor IDs to apply
     shot_id?: string // Bind to shot
+    count?: number // Number of images to generate
+    quality?: 'standard' | 'hd'
 }
 
 /**

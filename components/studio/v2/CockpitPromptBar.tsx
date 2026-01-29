@@ -17,6 +17,7 @@ import {
 import { useStudioStore } from "@/lib/studio/store"
 import { generateV2Image, generateV2Video } from "@/server/actions/studio/v2-generate"
 import { uploadTempImage } from "@/server/actions/studio/v2-upload"
+import { createV2Asset } from "@/server/actions/studio/v2-assets"
 // import type { V2Asset } from "@/lib/studio/v2-types"
 
 export function CockpitPromptBar() {
@@ -67,39 +68,87 @@ export function CockpitPromptBar() {
     setPrompt('') // Clear immediately for next input
     setIsGenerating(true) // Set loading state
     
+    // Construct Enhanced Prompt
+    let enhancedPrompt = currentPrompt
+    if (generationSettings.lighting) {
+        enhancedPrompt += `, ${generationSettings.lighting} lighting`
+    }
+    if (generationSettings.cameraAngle || generationSettings.lens) {
+        enhancedPrompt += `, ${generationSettings.cameraAngle || ''} ${generationSettings.lens || ''} camera view`
+    }
+
+    // Calculate Dimensions based on Aspect Ratio AND Resolution
+    let width = 1024
+    let height = 1024
+    const is4k = generationSettings.resolution === '4k'
+    const is720p = generationSettings.resolution === '720p'
+    
+    // Explicitly select quality based on resolution choice
+    // 4k -> HD, others -> Standard (to save credits/time unless user specifically asked for high res)
+    const quality = is4k ? 'hd' : 'standard'
+
+    switch (generationSettings.aspectRatio) {
+        case '16:9':
+            width = is4k ? 3840 : is720p ? 1280 : 1920
+            height = is4k ? 2160 : is720p ? 720 : 1080
+            break
+        case '9:16':
+            width = is4k ? 2160 : is720p ? 720 : 1080
+            height = is4k ? 3840 : is720p ? 1280 : 1920
+            break
+        case '4:5':
+            width = is4k ? 2160 : is720p ? 720 : 1080
+            height = is4k ? 2700 : is720p ? 900 : 1350
+            break
+        case '1:1':
+        default:
+            width = is4k ? 2048 : is720p ? 768 : 1024
+            height = is4k ? 2048 : is720p ? 768 : 1024
+            break
+    }
+
     try {
-      // Generate batch concurrently
-      const promises = Array.from({ length: batchCount }, async () => {
-        if (generationMode === 'image') {
-          return await generateV2Image(projectId, {
-            prompt: currentPrompt,
+      // Generate batch
+      // 1. Image Mode: Batch supported natively
+      if (generationMode === 'image') {
+          const result = await generateV2Image(projectId, {
+            prompt: enhancedPrompt,
             shot_id: activeShotId || undefined,
-            width: generationSettings.aspectRatio === '16:9' ? 1920 : generationSettings.aspectRatio === '9:16' ? 1080 : 1024,
-            height: generationSettings.aspectRatio === '16:9' ? 1080 : generationSettings.aspectRatio === '9:16' ? 1920 : 1024,
+            width,
+            height,
+            quality, // Pass calculated quality
             negative_prompt: generationSettings.negativePrompt,
             seed: generationSettings.seed,
-            reference_url: referenceImages[0],
+            reference_urls: referenceImages,
+            count: batchCount, // Pass count here
           })
-        } else {
-          return await generateV2Video(projectId, {
-            prompt: currentPrompt,
-            shot_id: activeShotId || undefined,
-            duration: generationSettings.duration || 4,
-            image_url: referenceImages[0],
+
+          if (result.error) {
+             setError(result.error)
+          } else if (result.data) {
+             // result.data is now V2Asset[]
+             result.data.forEach(asset => addAsset(asset))
+          }
+
+      } else {
+          // 2. Video Mode: Batch NOT supported natively effectively,
+          // so we keep the loop for video or implement similar logic later.
+          // For now, let's keep the loop for VIDEO ONLY
+          const promises = Array.from({ length: batchCount }, async () => {
+             return await generateV2Video(projectId, {
+                prompt: enhancedPrompt, // Use enhanced prompt for video too
+                shot_id: activeShotId || undefined,
+                duration: generationSettings.duration || 4,
+                image_url: referenceImages[0],
+             })
           })
-        }
-      })
-      
-      const results = await Promise.all(promises)
-      
-      // Add all successful assets
-      results.forEach(({ data, error }) => {
-        if (error) {
-          setError(error)
-        } else if (data) {
-          addAsset(data)
-        }
-      })
+
+          const results = await Promise.all(promises)
+          results.forEach(({ data, error }) => {
+            if (error) setError(error)
+            else if (data) data.forEach(asset => addAsset(asset)) // Handle array
+          })
+      }
       
     } catch {
       console.error('Generation error')
@@ -109,32 +158,83 @@ export function CockpitPromptBar() {
     }
   }
 
+  // Shared upload logic to persist asset
+  const persistUpload = async (file: File) => {
+      setIsUploading(true)
+      try {
+          const formData = new FormData()
+          formData.append('file', file)
+
+          // 1. Upload to Temp/Storage
+          const { url, error } = await uploadTempImage(formData)
+          
+          if (error || !url) {
+            setError(error || 'Failed to upload image')
+            return
+          }
+
+          // 2. Create Asset Record (So it shows in Sidebar "Uploads")
+          const { data: newAsset, error: dbError } = await createV2Asset({
+              project_id: projectId!,
+              type: 'image', 
+              media_url: url,
+              metadata: {
+                 prompt: file.name,
+                 is_upload: true, // Mark as upload for sidebar filter
+                 width: 0, 
+                 height: 0 
+              },
+              is_temporary: false
+          })
+          
+          if (dbError || !newAsset) {
+             // If DB save fails, we still might want to use the URL as reference?
+             // But valid concern to error out.
+             console.error("Failed to save asset DB record", dbError)
+          } else {
+              // Add to global asset store
+              addAsset(newAsset)
+          }
+
+          // 3. Add to local reference images
+          addReferenceImage(url)
+
+      } catch (err) {
+          console.error('Upload error', err)
+          setError('Upload failed')
+      } finally {
+          setIsUploading(false)
+      }
+  }
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
-    setIsUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      
-      const { url, error } = await uploadTempImage(formData)
-      
-      if (error || !url) {
-        setError(error || 'Failed to upload image')
-      } else {
-        addReferenceImage(url)
-      }
-    } catch {
-      console.error('Upload error')
-      setError('Upload failed')
-    } finally {
-      setIsUploading(false)
-      // Reset input
-      if (imageInputRef.current) {
-        imageInputRef.current.value = ''
-      }
+    if (!projectId) {
+        setError("Please open a project first")
+        return
     }
+    await persistUpload(file)
+    // Reset input
+    if (imageInputRef.current) {
+        imageInputRef.current.value = ''
+    }
+  }
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      for (const item of items) {
+          if (item.type.startsWith('image/')) {
+              const file = item.getAsFile()
+              if (file && projectId) {
+                  e.preventDefault()
+                  await persistUpload(file)
+                  return // Handle one image per paste for now to avoid chaos
+              }
+          }
+      }
   }
 
   return (
@@ -205,30 +305,39 @@ export function CockpitPromptBar() {
 
             {/* Ref Image */}
             <div className="relative">
-                 {referenceImages.length > 0 ? (
-                    <div className="relative group w-8 h-8 flex items-center justify-center">
-                        <img src={referenceImages[0]} alt="ref" className="w-7 h-7 rounded-full object-cover ring-1 ring-white/10" />
-                        <button
-                            onClick={() => removeReferenceImage(referenceImages[0])}
-                            className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                {/* Ref Image Stack */}
+                <div className="flex -space-x-1.5 items-center">
+                    {referenceImages.map((url, idx) => (
+                        <div key={idx} className="relative group w-8 h-8 flex items-center justify-center transition-all hover:z-10 hover:scale-110">
+                            <img src={url} alt="ref" className="w-7 h-7 rounded-full object-cover ring-1 ring-white/10 bg-zinc-900" />
+                            <button
+                                onClick={() => removeReferenceImage(url)}
+                                className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                            >
+                                <X size={8} className="text-white" />
+                            </button>
+                        </div>
+                    ))}
+                    
+                    {/* Add Button (if < 10) */}
+                    {(referenceImages.length < 10) && (
+                        <button 
+                                onClick={() => imageInputRef.current?.click()}
+                                disabled={isUploading}
+                                className={cn(
+                                    "w-8 h-8 rounded-full bg-zinc-900/50 hover:bg-zinc-800 border-dashed border border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-all relative overflow-hidden z-0",
+                                    referenceImages.length > 0 && "ml-1.5"
+                                )}
+                                title="Add Reference"
                         >
-                            <X size={8} className="text-white" />
+                            {isUploading ? (
+                                <Loader2 size={14} className="animate-spin text-[#c084fc]" />
+                            ) : (
+                                <ImageIcon size={14} />
+                            )}
                         </button>
-                    </div>
-                 ) : (
-                    <button 
-                            onClick={() => imageInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="w-8 h-8 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-all relative overflow-hidden"
-                            title="Add Reference"
-                    >
-                        {isUploading ? (
-                            <Loader2 size={14} className="animate-spin text-[#c084fc]" />
-                        ) : (
-                            <ImageIcon size={16} />
-                        )}
-                    </button>
-                 )}
+                    )}
+                </div>
             </div>
       </div>
 
@@ -278,6 +387,7 @@ export function CockpitPromptBar() {
                     ref={textareaRef}
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
+                    onPaste={handlePaste}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                         e.preventDefault()

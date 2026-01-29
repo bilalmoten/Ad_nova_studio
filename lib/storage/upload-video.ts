@@ -35,7 +35,7 @@ export async function uploadVideo(
   // Upload to Supabase Storage
   const storagePath = `projects/${projectId}/videos/${filename}`;
   const { error } = await supabase.storage
-    .from('assets')
+    .from('v2_assets')
     .upload(storagePath, buffer, {
       contentType: 'video/mp4',
       upsert: true,
@@ -48,7 +48,7 @@ export async function uploadVideo(
   // Get public URL
   const {
     data: { publicUrl },
-  } = supabase.storage.from('assets').getPublicUrl(storagePath);
+  } = supabase.storage.from('v2_assets').getPublicUrl(storagePath);
 
   return publicUrl;
 }

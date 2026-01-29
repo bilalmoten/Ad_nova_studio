@@ -83,7 +83,7 @@ export function VideoGenerationView() {
         setError(result.error)
         toast({ title: "Generation Failed", description: result.error, variant: "destructive" })
       } else if (result.data) {
-        addAsset(result.data)
+        result.data.forEach(asset => addAsset(asset))
         toast({ title: "Generation Started", description: "Video is processing..." })
       }
     } catch (err) {

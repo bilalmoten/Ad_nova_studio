@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import { Upload, Loader2, X, Image as ImageIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 // import { createStudioProject } from '@/server/actions/studio/projects'
-import { uploadImageAction } from '@/server/actions/studio/upload'
+import { uploadTempImage } from '@/server/actions/studio/v2-upload'
 
 interface CreateProjectModalProps {
   open: boolean
@@ -107,20 +107,22 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
     // Upload reference image if provided
     if (uploadedFiles.length > 0) {
       try {
-        const file = uploadedFiles[0].file
-        const reader = new FileReader()
-        const base64 = await new Promise<string>((resolve) => {
-          reader.onload = () => {
-            const result = reader.result as string
-            // Remove data URL prefix
-            resolve(result.split(',')[1])
-          }
-          reader.readAsDataURL(file)
-        })
+        // const file = uploadedFiles[0].file
+        // const reader = new FileReader()
+        // const base64 = await new Promise<string>((resolve) => {
+        //   reader.onload = () => {
+        //     const result = reader.result as string
+        //     // Remove data URL prefix
+        //     resolve(result.split(',')[1])
+        //   }
+        //   reader.readAsDataURL(file)
+        // })
         
         // Create a temporary project ID for upload
-        const tempId = `temp-${Date.now()}`
-        const uploadResult = await uploadImageAction(tempId, base64, `reference-${Date.now()}.${file.type.split('/')[1] || 'png'}`)
+        const formData = new FormData()
+        formData.append('file', uploadedFiles[0].file)
+        
+        const uploadResult = await uploadTempImage(formData)
         if (uploadResult.error) {
           throw new Error(uploadResult.error)
         }
@@ -204,10 +206,10 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="prompt">Description / Prompt *</Label>
+              <Label htmlFor="prompt">Project Brief *</Label>
               <Textarea
                 id="prompt"
-                placeholder="Describe the video you want to create... (e.g., 'A sleek product reveal for our new smartphone, showing off its camera capabilities and premium design')"
+                placeholder="Describe the video you want to create... (e.g., 'A sleek product reveal for our new smartphone...')"
                 className="min-h-[120px]"
                 value={formData.prompt}
                 onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
@@ -339,7 +341,7 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
                 Creating...
               </>
             ) : (
-              'Generate Concepts'
+              'Create Project'
             )}
           </GradientButton>
         </div>
