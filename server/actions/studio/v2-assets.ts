@@ -317,3 +317,87 @@ export async function saveV2Asset(
 ): Promise<{ data: V2Asset | null; error: string | null }> {
     return updateV2Asset(assetId, { is_temporary: false })
 }
+
+/**
+ * Extract images from a grid/batch asset
+ * This creates individual asset records for each image in a batch,
+ * allowing users to work with them individually.
+ * 
+ * For now, since we don't actually have a grid image to split,
+ * this creates N copies of the parent asset as children.
+ * In a real implementation, you would use image processing to
+ * detect and extract individual images from a grid.
+ */
+export async function extractGridImages(
+    parentAssetId: string,
+    count: number // Number of images to extract (user specifies based on what they see)
+): Promise<{ data: V2Asset[]; error: string | null }> {
+    try {
+        const supabase = await createClient()
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+            return { data: [], error: 'Unauthorized' }
+        }
+
+        // Get parent asset
+        const { data: parentAsset, error: fetchError } = await supabase
+            .from('v2_assets')
+            .select('*')
+            .eq('id', parentAssetId)
+            .single()
+
+        if (fetchError || !parentAsset) {
+            return { data: [], error: 'Parent asset not found' }
+        }
+
+        // Create child assets - each one references the parent and the same image
+        // In a real implementation, you'd crop/extract specific regions
+        const childAssets: V2Asset[] = []
+
+        for (let i = 0; i < count; i++) {
+            const { data: child, error: insertError } = await supabase
+                .from('v2_assets')
+                .insert({
+                    project_id: parentAsset.project_id,
+                    type: parentAsset.type,
+                    media_url: parentAsset.media_url, // Same image for now
+                    parent_id: parentAssetId,
+                    metadata: {
+                        ...(parentAsset.metadata || {}),
+                        extracted_from_grid: true,
+                        grid_position: i + 1,
+                        original_prompt: (parentAsset.metadata as any)?.prompt || '',
+                    },
+                    is_temporary: false,
+                    status: 'ready',
+                })
+                .select()
+                .single()
+
+            if (insertError) {
+                console.error(`Error creating extracted asset ${i}:`, insertError)
+            } else if (child) {
+                childAssets.push(child as V2Asset)
+            }
+        }
+
+        // Mark parent as having been extracted
+        await supabase
+            .from('v2_assets')
+            .update({
+                metadata: {
+                    ...(parentAsset.metadata || {}),
+                    grid_extracted: true,
+                    extracted_count: count
+                }
+            })
+            .eq('id', parentAssetId)
+
+        revalidatePath('/dashboard2/studio-new')
+        return { data: childAssets, error: null }
+    } catch (err) {
+        console.error('Error extracting grid images:', err)
+        return { data: [], error: 'Failed to extract images' }
+    }
+}

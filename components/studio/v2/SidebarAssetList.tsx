@@ -11,20 +11,25 @@ export function SidebarAssetList() {
     const [isUploading, setIsUploading] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // Filter assets
+    // Filter assets - Sidebar only shows UPLOADS and FAVORITES
     const visualAssets = assets.filter(a => {
         // Base type check
         if (a.type !== 'image' && a.type !== 'video') return false
         
+        const isUpload = !!(a.metadata as any)?.is_upload
+        const isFavorite = a.is_favorite
+        
         // Tab filter
         if (filter === 'uploads') {
-            return !!(a.metadata as any)?.is_upload
+            return isUpload
         }
         if (filter === 'generated') {
-            return !(a.metadata as any)?.is_upload
+            // "Generated" tab shows favorites/finalized generated assets
+            return isFavorite && !isUpload
         }
         
-        return true
+        // "All" shows both uploads and favorites
+        return isUpload || isFavorite
     })
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +108,7 @@ export function SidebarAssetList() {
                         onClick={() => setFilter('generated')}
                         className={cn("px-2.5 py-1 text-[10px] font-bold rounded-md transition-all", filter === 'generated' ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300")}
                      >
-                        GEN
+                        FINAL
                      </button>
                 </div>
 

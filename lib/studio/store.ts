@@ -20,7 +20,7 @@ export interface GenerationSettings {
     cameraAngle?: 'eye-level' | 'high' | 'low' | 'dutch'
     lens?: 'wide' | 'normal' | 'telephoto'
     // Format
-    aspectRatio?: '16:9' | '9:16' | '1:1' | '4:5'
+    aspectRatio?: '16:9' | '9:16' | '1:1' | '4:5' | '3:2' | '2:3'
     resolution?: '720p' | '1080p' | '4k'
     // Motion (for video)
     duration?: 4 | 6 | 8
@@ -29,6 +29,11 @@ export interface GenerationSettings {
     seed?: number
     negativePrompt?: string
     model?: string
+    // Output
+    format?: 'jpeg' | 'png' | 'webp'
+    compression?: number
+    background?: 'transparent'
+    quality?: 'low' | 'medium' | 'high' | 'auto'
 }
 
 export interface StudioState {
@@ -79,6 +84,12 @@ export interface StudioState {
 
     isGenerating: boolean
     setIsGenerating: (isGenerating: boolean) => void
+
+    // Queue for concurrent generations
+    generationQueue: Array<{ id: string; prompt: string; count: number }>
+    addToQueue: (item: { id: string; prompt: string; count: number }) => void
+    removeFromQueue: (id: string) => void
+
     generatingAssetId: string | null // Track which asset is being generated
     setGeneratingAssetId: (id: string | null) => void
 
@@ -201,6 +212,20 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
     // Generation
     setIsGenerating: (isGenerating) => set({ isGenerating }),
+
+    generationQueue: [],
+    addToQueue: (item) => set((state) => ({
+        generationQueue: [...state.generationQueue, item],
+        isGenerating: true
+    })),
+    removeFromQueue: (id) => set((state) => {
+        const newQueue = state.generationQueue.filter(i => i.id !== id)
+        return {
+            generationQueue: newQueue,
+            isGenerating: newQueue.length > 0
+        }
+    }),
+
     setGeneratingAssetId: (id) => set({ generatingAssetId: id }),
 
     // Loading

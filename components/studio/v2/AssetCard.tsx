@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { cn } from "@/lib/utils"
+import { cn, formatRelativeTime } from "@/lib/utils"
 import { 
   Heart, 
   Download, 
@@ -29,6 +29,7 @@ interface AssetCardProps {
     isFavorite: boolean
     parentId?: string
     meta?: { width?: number; height?: number }
+    createdAt?: string
   }
 }
 
@@ -180,10 +181,14 @@ export function AssetCard({ asset }: AssetCardProps) {
     
     // Add reference image if exists (RESTORE ORIGINAL CONTEXT)
     // Only use the reference URL stored in metadata (the one used to generate this asset)
-    // Do NOT use the asset itself unless it was explicitly used as a ref in a chain (which should be in metadata)
     useStudioStore.getState().clearReferenceImages()
-    if (metadata?.reference_url) {
-      useStudioStore.getState().addReferenceImage(metadata.reference_url)
+    
+    if (metadata?.reference_urls && Array.isArray(metadata.reference_urls)) {
+        metadata.reference_urls.forEach((url: string) => {
+             useStudioStore.getState().addReferenceImage(url)
+        })
+    } else if (metadata?.reference_url) {
+         useStudioStore.getState().addReferenceImage(metadata.reference_url)
     }
     
     // Set generation mode
@@ -246,7 +251,7 @@ export function AssetCard({ asset }: AssetCardProps) {
         )}
 
         {/* MEDIA LAYER */}
-        <div className="relative aspect-[4/3] bg-zinc-800 overflow-hidden">
+        <div className="relative w-full bg-zinc-800 overflow-hidden" style={{ aspectRatio: asset.meta?.width && asset.meta?.height ? asset.meta.width / asset.meta.height : '1/1' }}>
              
              {/* Main Image */}
              {asset.type === 'image' && asset.url && !isError && (
@@ -315,46 +320,43 @@ export function AssetCard({ asset }: AssetCardProps) {
 
              {/* HOVER ACTIONS OVERLAY */}
              {!isGenerating && !isError && showActions && (
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-3 z-10 pointer-events-none">
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-between p-3 z-10 animate-in fade-in duration-200">
                      
-                     <div className="flex items-center justify-between pointer-events-auto">
-                          <div className="flex gap-1.5">
-                               <ActionBtn 
+                     {/* Top Actions */}
+                     <div className="flex justify-between items-start pointer-events-auto">
+                        {isFinal && (
+                             <div className="flex items-center gap-1 bg-[#fbbf24] text-black px-2 py-0.5 rounded shadow-lg text-[9px] font-bold uppercase">
+                                 <Lock size={9} /> Final
+                             </div>
+                        )}
+                        <div className="ml-auto">
+                             <ActionBtn 
                                    icon={<Heart size={14} fill={isFinal ? "currentColor" : "none"} />} 
                                    tooltip="Save" 
                                    active={isFinal}
                                    onClick={handleToggleFavorite}
                                    disabled={isUpdating}
+                                   className="border-none bg-black/20 hover:bg-black/60 text-white"
                                />
-                               <ActionBtn 
-                                   icon={<Download size={14} />} 
-                                   tooltip="Download"
-                                   onClick={handleDownload}
-                               />
-                               <ActionBtn 
-                                   icon={<Copy size={14} />} 
-                                   tooltip="Copy Prompt"
-                                   onClick={handleCopyPrompt}
-                               />
-                          </div>
+                        </div>
+                     </div>
+
+                     {/* Bottom Actions */}
+                     <div className="space-y-3 pointer-events-auto">
+                          <p className="text-[11px] font-medium text-white/90 leading-tight line-clamp-3 drop-shadow-md">
+                              {asset.prompt}
+                          </p>
                           
-                          <div className="flex gap-1.5">
-                               <ActionBtn 
-                                   icon={<ImagePlus size={14} />} 
-                                   tooltip="Use as Reference"
-                                   onClick={handleUseAsReference}
-                               />
-                               <ActionBtn 
-                                   icon={<Settings2 size={14} />} 
-                                   tooltip="Reuse Prompt"
-                                   onClick={handleReuseSettings}
-                               />
-                               <ActionBtn 
-                                   icon={<Wand2 size={14} />} 
-                                   tooltip="Create Variation"
-                                   onClick={handleCreateVariation}
-                                   disabled={isUpdating}
-                               />
+                          <div className="flex items-center justify-between">
+                              <div className="flex gap-1.5">
+                                   <ActionBtn icon={<Download size={14} />} tooltip="Download" onClick={handleDownload} />
+                                   <ActionBtn icon={<Copy size={14} />} tooltip="Copy Prompt" onClick={handleCopyPrompt} />
+                              </div>
+                              <div className="flex gap-1.5">
+                                   <ActionBtn icon={<ImagePlus size={14} />} tooltip="Use as Reference" onClick={handleUseAsReference} />
+                                   <ActionBtn icon={<Settings2 size={14} />} tooltip="Reuse Settings" onClick={handleReuseSettings} />
+                                   <ActionBtn icon={<Wand2 size={14} />} tooltip="Variation" onClick={handleCreateVariation} disabled={isUpdating} />
+                              </div>
                           </div>
                      </div>
                  </div>
@@ -362,34 +364,7 @@ export function AssetCard({ asset }: AssetCardProps) {
 
         </div>
 
-        {/* METADATA FOOTER */}
-        <div className="p-3.5 bg-zinc-900/90">
-             <p className={cn(
-                 "text-[13px] font-medium leading-snug line-clamp-2 mb-2",
-                 isError ? "text-zinc-500" : "text-zinc-200"
-             )}>
-                 {asset.prompt || "Untitled Asset"}
-             </p>
-             
-             {!isError && (
-                <div className="flex items-center justify-between text-[10px]">
-                      <div className="flex items-center gap-2 text-zinc-500 font-mono">
-                          <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#c084fc]/30 to-[#a3e635]/30 border border-[#c084fc]/20 flex items-center justify-center">
-                              <Wand2 size={8} className="text-[#c084fc]" />
-                          </div>
-                          <span>v4.2</span>
-                          <span className="text-zinc-700">•</span>
-                          <span>2m ago</span>
-                      </div>
-                      
-                      {asset.meta?.width && (
-                          <span className="font-mono text-zinc-600 bg-zinc-800/50 px-1.5 py-0.5 rounded border border-zinc-700/50">
-                              {asset.meta.width}×{asset.meta.height}
-                          </span>
-                      )}
-                </div>
-             )}
-        </div>
+
 
     </div>
   )

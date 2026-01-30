@@ -13,7 +13,9 @@ import {
   Palette,
   Ban,
   Search,
-  LayoutGrid
+  LayoutGrid,
+  ZoomIn,
+  ZoomOut
 } from "lucide-react"
 import { DetailModal } from "@/components/studio/v2/DetailModal"
 
@@ -25,12 +27,13 @@ interface StudioLayoutProps {
   assetsContent?: React.ReactNode
   viewMode?: 'assets' | 'generate' | 'edit'
   onViewModeChange?: (mode: 'assets' | 'generate' | 'edit') => void
+  gridCols?: number
+  onGridColsChange?: (cols: number) => void
 }
 
-export function StudioLayout({ children, vaultContent, cockpitContent, assetsContent, viewMode = 'assets', onViewModeChange }: StudioLayoutProps) {
+export function StudioLayout({ children, vaultContent, cockpitContent, assetsContent, viewMode = 'assets', onViewModeChange, gridCols = 4, onGridColsChange }: StudioLayoutProps) {
   const [isVaultOpen, setIsVaultOpen] = useState(true)
   const [activeVaultTab, setActiveVaultTab] = useState<'assets' | 'scripts'>('scripts')
-  const [gridCols] = useState(4)
 
   return (
     <div className="flex h-screen w-full bg-zinc-950 text-zinc-100 overflow-hidden font-sans selection:bg-[#a3e635] selection:text-black">
@@ -44,7 +47,7 @@ export function StudioLayout({ children, vaultContent, cockpitContent, assetsCon
       <aside 
         className={cn(
           "h-full bg-zinc-900/60 backdrop-blur-xl border-r border-zinc-800/50 transition-all duration-300 relative flex flex-col z-40",
-          isVaultOpen ? "w-[260px]" : "w-[72px]"
+          isVaultOpen ? "w-[320px]" : "w-[72px]"
         )}
       >
         {/* Toggle */}
@@ -181,10 +184,28 @@ export function StudioLayout({ children, vaultContent, cockpitContent, assetsCon
                      className="bg-transparent text-xs text-zinc-300 placeholder:text-zinc-600 outline-none w-24"
                    />
                  </div>
-                 <button className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 transition-colors bg-zinc-800/40 border border-zinc-700/30 rounded-lg px-2.5 py-1.5">
-                   <LayoutGrid size={12} />
-                   <span className="text-[10px] font-bold">{gridCols} COL</span>
-                 </button>
+                 <div className="flex items-center gap-1 bg-zinc-800/40 border border-zinc-700/30 rounded-lg p-0.5">
+                    <button 
+                        onClick={() => onGridColsChange?.(Math.max(1, gridCols - 1))}
+                        disabled={gridCols <= 1}
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Increase Size (Fewer Columns)"
+                    >
+                        <ZoomIn size={12} />
+                    </button>
+                    <div className="flex flex-col items-center justify-center w-8">
+                         <span className="text-[10px] font-bold leading-none text-zinc-300">{gridCols}</span>
+                         <span className="text-[8px] font-medium leading-none text-zinc-600">COL</span>
+                    </div>
+                    <button 
+                        onClick={() => onGridColsChange?.(Math.min(8, gridCols + 1))}
+                        disabled={gridCols >= 8}
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Decrease Size (More Columns)"
+                    >
+                        <ZoomOut size={12} />
+                    </button>
+                 </div>
             </div>
         </div>
 
@@ -195,8 +216,8 @@ export function StudioLayout({ children, vaultContent, cockpitContent, assetsCon
              </div>
              
              {/* Cockpit Container */}
-             <div className="sticky bottom-5 flex justify-center w-full px-5 pointer-events-none z-50">
-                 <div className="pointer-events-auto">
+             <div className="sticky bottom-5 flex justify-center px-5 pointer-events-none z-50">
+                 <div className="pointer-events-auto w-full max-w-[800px]">
                      {cockpitContent}
                  </div>
              </div>
@@ -204,6 +225,8 @@ export function StudioLayout({ children, vaultContent, cockpitContent, assetsCon
 
       </main>
 
+       {false && (
+        <>
       {/* ZONE D: GLOBAL CONTEXT */}
       <aside className="w-12 hover:w-[280px] transition-all duration-300 ease-out h-full border-l border-zinc-800/50 bg-zinc-900/60 backdrop-blur-xl z-40 flex flex-col group overflow-hidden">
           
@@ -233,7 +256,9 @@ export function StudioLayout({ children, vaultContent, cockpitContent, assetsCon
 
           </div>
 
-      </aside>
+          </aside>
+           </>
+      )}
 
     </div>
   )

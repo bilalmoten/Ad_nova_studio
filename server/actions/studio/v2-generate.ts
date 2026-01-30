@@ -153,6 +153,9 @@ export async function generateV2Image(
             width: options.width,
             height: options.height,
             quality: isHD ? 'hd' : 'standard',
+            output_format: options.output_format,
+            output_compression: options.output_compression,
+            background: options.background,
             numberOfImages: count, // Use input count
             model: modelToUse,
             azureConfig: useAzure ? azureConfig : undefined,

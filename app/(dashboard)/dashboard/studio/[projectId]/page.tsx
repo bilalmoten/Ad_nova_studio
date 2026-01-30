@@ -125,7 +125,7 @@ export default function StudioPage({ params }: { params: Promise<{ projectId: st
 
   // Filter assets based on sidebar selection
   const { activeShotId } = useStudioStore()
-  const filteredAssets = activeShotId === 'ALL'
+  const filteredAssets = (activeShotId === 'ALL'
     ? displayAssets
     : activeShotId 
     ? displayAssets.filter(a => {
@@ -137,11 +137,13 @@ export default function StudioPage({ params }: { params: Promise<{ projectId: st
         const assetShotId = assets.find(asset => asset.id === a.id)?.metadata?.shot_id
         return !assetShotId
       })
+  ).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
 
   // View Switching
   const [viewMode, setViewMode] = useState<'assets' | 'generate' | 'edit'>('assets')
   
-
+  // Grid Columns
+  const [gridCols, setGridCols] = useState(4)
 
   return (
     <>
@@ -152,6 +154,8 @@ export default function StudioPage({ params }: { params: Promise<{ projectId: st
        contextContent={<ContextPanel />}
        viewMode={viewMode}
        onViewModeChange={setViewMode}
+       gridCols={gridCols}
+       onGridColsChange={setGridCols}
     >
         
         {viewMode === 'generate' && (
@@ -218,26 +222,46 @@ export default function StudioPage({ params }: { params: Promise<{ projectId: st
 
             {/* Masonry Grid */}
             {!isLoadingAssets && (
-                <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-5">
-                    
-                    {/* Ghost Card (Generating) */}
-                    {isGenerating && (
-                        <div className="break-inside-avoid mb-5 rounded-xl bg-zinc-900/80 backdrop-blur border-2 border-[#c084fc] aspect-[4/3] flex flex-col items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-[#c084fc]/5 to-[#a3e635]/5 animate-pulse" />
-                            <div className="w-10 h-10 rounded-full border-2 border-[#c084fc] border-t-transparent animate-spin mb-3 relative z-10" />
-                            <div className="text-[#c084fc] text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Generating</div>
-                            <div className="text-zinc-600 text-[9px] font-mono relative z-10">Creating asset...</div>
-                        </div>
-                    )}
+                <div className="flex gap-4 items-start">
+                    {(() => {
+                        // Prepare Items
+                        const queueItems = useStudioStore.getState().generationQueue.map(q => ({ ...q, _type: 'queue' as const }))
+                        const assetItems = filteredAssets.map(a => ({ ...a, _type: 'asset' as const }))
+                        const allItems = [...queueItems, ...assetItems]
+                        
+                        // Distribute into Columns
+                        const columns = Array.from({ length: Math.max(1, gridCols) }, () => [] as typeof allItems)
+                        allItems.forEach((item, i) => {
+                            columns[i % Math.max(1, gridCols)].push(item)
+                        })
 
-                    {/* Real Assets */}
-                    {filteredAssets.map((asset) => (
-                        <AssetCard 
-                            key={asset.id} 
-                            asset={asset as any} 
-                        />
-                    ))}
-
+                        return columns.map((colItems, colIndex) => (
+                            <div key={colIndex} className="flex-1 flex flex-col gap-4 min-w-0">
+                                {colItems.map((item) => (
+                                    item._type === 'queue' ? (
+                                        <div key={item.id} className="relative w-full aspect-[4/3] rounded-xl bg-zinc-900/80 backdrop-blur border-2 border-[#c084fc] flex flex-col items-center justify-center overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-[#c084fc]/5 to-[#a3e635]/5 animate-pulse" />
+                                            <div className="w-10 h-10 rounded-full border-2 border-[#c084fc] border-t-transparent animate-spin mb-3 relative z-10" />
+                                            <div className="text-[#c084fc] text-[10px] font-bold uppercase tracking-widest mb-1 relative z-10">Generating</div>
+                                            <div className="text-zinc-600 text-[9px] font-mono relative z-10 max-w-[80%] text-center truncate px-2">
+                                                {item.prompt}
+                                            </div>
+                                            {item.count > 1 && (
+                                                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-[#c084fc] text-black text-[9px] font-bold">
+                                                    x{item.count}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <AssetCard 
+                                            key={item.id} 
+                                            asset={item as any} 
+                                        />
+                                    )
+                                ))}
+                            </div>
+                        ))
+                    })()}
                 </div>
             )}
             

@@ -214,7 +214,10 @@ export interface GenerateImageOptions {
     anchors?: string[] // Anchor IDs to apply
     shot_id?: string // Bind to shot
     count?: number // Number of images to generate
-    quality?: 'standard' | 'hd'
+    quality?: 'low' | 'medium' | 'high' | 'auto' | 'standard' | 'hd'
+    output_format?: 'jpeg' | 'png' | 'webp'
+    output_compression?: number // 0-100
+    background?: 'transparent' // or undefined
 }
 
 /**

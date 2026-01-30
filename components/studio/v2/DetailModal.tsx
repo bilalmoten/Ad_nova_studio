@@ -1,12 +1,13 @@
 "use client"
 
 import { useStudioStore } from "@/lib/studio/store"
-import { X, Info, Download, Calendar, Database, Wand2, Lock, Trash2, ImagePlus, CheckCircle2 } from "lucide-react"
+import { X, Info, Download, Calendar, Wand2, Lock, ImagePlus, Grid3X3, Settings2, Copy } from "lucide-react"
 import { createPortal } from "react-dom"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 // import { MOCK_ASSETS } from "@/lib/studio/mock-data" // Removed mock
-import { toggleV2AssetFavorite, deleteV2Asset } from "@/server/actions/studio/v2-assets"
+import { toggleV2AssetFavorite, extractGridImages } from "@/server/actions/studio/v2-assets"
+import { createV2Variation } from "@/server/actions/studio/v2-generate"
 
 export function DetailModal() {
   const { 
@@ -17,10 +18,15 @@ export function DetailModal() {
     clearReferenceImages,
     setPrompt,
     updateAsset,
-    setError
+    addAsset,
+    setError,
+    updateGenerationSettings,
+    setGenerationMode
   } = useStudioStore()
   
   const [mounted, setMounted] = useState(false)
+  const [extractCount, setExtractCount] = useState(4)
+  const [isExtracting, setIsExtracting] = useState(false)
   
   // Find real asset
   const asset = assets.find(a => a.id === activeAssetId)
@@ -48,18 +54,61 @@ export function DetailModal() {
     }
   }
 
-  const handleReusePrompt = () => {
+  const handleReuseSettings = () => {
+      // 1. Set Prompt
       if (metadata.prompt) {
           setPrompt(metadata.prompt)
       }
       
-      // Restore References
+      // 2. Map Settings
+      const settings: any = {}
+      
+      // Aspect Ratio
+      if (metadata.width && metadata.height) {
+          const ratio = metadata.width / metadata.height
+          if (ratio > 1.4) settings.aspectRatio = '16:9' // 3:2 maps to 16:9 UI for now, or use '3:2' if supported
+          else if (ratio < 0.7) settings.aspectRatio = '9:16'
+          else settings.aspectRatio = '1:1'
+      }
+      
+      // Camera /Lighting
+      if (metadata.camera_settings?.angle) settings.cameraAngle = metadata.camera_settings.angle
+      if (metadata.camera_settings?.lens) settings.lens = metadata.camera_settings.lens
+      if (metadata.lighting) settings.lighting = metadata.lighting
+      
+      // Apply
+      updateGenerationSettings(settings)
+      
+      // 3. Restore References
       clearReferenceImages()
       if (metadata.reference_urls && Array.isArray(metadata.reference_urls)) {
           metadata.reference_urls.forEach((url: string) => addReferenceImage(url))
+      } else if (metadata.reference_url) {
+          addReferenceImage(metadata.reference_url)
       }
       
+      // 4. Mode
+      setGenerationMode(asset.type === 'video' ? 'video' : 'image')
+      
       setActiveAssetId(null)
+  }
+
+  const handleCreateVariation = async () => {
+      // setIsUpdating(true) - local state?
+      // Just fire and forget for now or show toast. 
+      // DetailModal doesn't tracking generating state easily without store support.
+      // We'll just call it and close modal or show feedback.
+      try {
+          // Toast or simple error handle
+          await createV2Variation(asset.id, metadata.prompt || '')
+          setActiveAssetId(null) // Close to see generation
+      } catch (e) {
+          setError('Variation failed')
+      }
+  }
+
+  const handleCopyPrompt = () => {
+      if (metadata.prompt) navigator.clipboard.writeText(metadata.prompt)
   }
 
   const handleToggleFinal = async () => {
@@ -86,6 +135,24 @@ export function DetailModal() {
           URL.revokeObjectURL(url)
       } catch {
           setError('Download failed')
+      }
+  }
+
+  const handleExtract = async () => {
+      if (isExtracting) return
+      setIsExtracting(true)
+      try {
+          const { data, error } = await extractGridImages(asset.id, extractCount)
+          if (error) {
+              setError(error)
+          } else if (data) {
+              data.forEach(child => addAsset(child))
+              setActiveAssetId(null)
+          }
+      } catch {
+          setError('Extraction failed')
+      } finally {
+          setIsExtracting(false)
       }
   }
 
@@ -134,25 +201,64 @@ export function DetailModal() {
                  )}
 
                  {/* Top actions */}
-                 <div className="absolute top-6 left-6 flex gap-2 z-20">
+                 <div className="absolute top-6 left-6 flex gap-2 z-20 flex-wrap">
                      <button 
                         onClick={handleUseAsRef}
+                        title="Use as Reference"
                         className="bg-black/50 hover:bg-black/80 backdrop-blur border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all"
                      >
-                         <ImagePlus size={14} /> Use as Reference
+                         <ImagePlus size={14} /> Ref
                      </button>
                      <button 
-                        onClick={handleReusePrompt}
+                        onClick={handleReuseSettings}
+                        title="Reuse Settings & Prompt"
                         className="bg-black/50 hover:bg-black/80 backdrop-blur border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all"
                      >
-                         <Wand2 size={14} /> Reuse Prompt
+                         <Settings2 size={14} /> Reuse
+                     </button>
+                     <button 
+                        onClick={handleCreateVariation}
+                        title="Create Variation"
+                        className="bg-black/50 hover:bg-black/80 backdrop-blur border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all"
+                     >
+                         <Wand2 size={14} /> Variation
+                     </button>
+                     <button 
+                        onClick={handleCopyPrompt}
+                        title="Copy Prompt"
+                        className="bg-black/50 hover:bg-black/80 backdrop-blur border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all"
+                     >
+                         <Copy size={14} /> Copy
                      </button>
                      <button 
                         onClick={handleDownload}
+                        title="Download"
                         className="bg-black/50 hover:bg-black/80 backdrop-blur border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all"
                      >
-                         <Download size={14} /> Download
+                         <Download size={14} /> DL
                      </button>
+                     
+                     {/* Extract Grid - with count selector */}
+                     {asset.type === 'image' && (
+                         <div className="flex items-center gap-1 bg-black/50 backdrop-blur border border-zinc-700 rounded-lg overflow-hidden">
+                             <select
+                                value={extractCount}
+                                onChange={(e) => setExtractCount(Number(e.target.value))}
+                                className="bg-transparent text-zinc-300 text-xs font-bold px-2 py-2 outline-none cursor-pointer appearance-none"
+                             >
+                                 {[2, 3, 4, 6, 8, 9, 10, 12].map(n => (
+                                     <option key={n} value={n} className="bg-zinc-900">{n}</option>
+                                 ))}
+                             </select>
+                             <button 
+                                onClick={handleExtract}
+                                disabled={isExtracting}
+                                className="hover:bg-black/80 text-zinc-300 hover:text-[#a3e635] px-3 py-2 text-xs font-bold flex items-center gap-2 transition-all border-l border-zinc-700 disabled:opacity-50"
+                             >
+                                 <Grid3X3 size={14} /> {isExtracting ? '...' : 'Grid'}
+                             </button>
+                         </div>
+                     )}
                  </div>
              </div>
 

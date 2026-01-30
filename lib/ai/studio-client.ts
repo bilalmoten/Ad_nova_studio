@@ -70,12 +70,15 @@ export interface ImageGenerationInput {
     prompt: string
     negativePrompt?: string
     referenceImages?: ImageInput[]
-    aspectRatio?: '16:9' | '9:16' | '1:1' | '4:5'
+    aspectRatio?: '16:9' | '9:16' | '1:1' | '4:5' | '3:2' | '2:3' | string
     width?: number
     height?: number
     numberOfImages?: number
     model?: string
-    quality?: 'standard' | 'hd'
+    quality?: 'standard' | 'hd' | 'low' | 'medium' | 'high' | 'auto' | string
+    output_format?: 'jpeg' | 'png' | 'webp'
+    output_compression?: number
+    background?: 'transparent'
     azureConfig?: AzureConfig
 }
 
@@ -305,17 +308,17 @@ class StudioAIClient {
                 // ---------------------------------------------------------
                 // GPT-Image-1.5 Native Image Editing
                 // ---------------------------------------------------------
-                // Determine valid DALL-E 3 size based on input width/height/aspectRatio
-                // DALL-E 3 only supports: 1024x1024, 1024x1792, 1792x1024
+                // Determine valid GPT 1.5 size based on input width/height/aspectRatio
+                // GPT 1.5 supports: 1024x1024 | 1536x1024 | 1024x1536 | auto
                 let size = '1024x1024'
                 if (input.width && input.height) {
                     const ratio = input.width / input.height
-                    if (ratio > 1.5) size = '1792x1024' // Wide
-                    else if (ratio < 0.7) size = '1024x1792' // Tall
+                    if (ratio > 1.2) size = '1536x1024' // Landscape (3:2 approx)
+                    else if (ratio < 0.8) size = '1024x1536' // Portrait (2:3 approx)
                     else size = '1024x1024' // Square
                 } else if (input.aspectRatio) {
-                    if (input.aspectRatio === '16:9') size = '1792x1024'
-                    else if (input.aspectRatio === '9:16') size = '1024x1792'
+                    if (input.aspectRatio === '16:9' || input.aspectRatio === '3:2') size = '1536x1024'
+                    else if (input.aspectRatio === '9:16' || input.aspectRatio === '2:3') size = '1024x1536'
                     else size = '1024x1024'
                 }
 
@@ -331,9 +334,8 @@ class StudioAIClient {
                     formData.append('prompt', input.prompt)
                     formData.append('model', 'gpt-image-1.5')
                     formData.append('n', (input.numberOfImages || 1).toString())
-                    formData.append('size', '1024x1024')
-                    // Note: Edits endpoint generally requires square 1024x1024 or same size as input
-                    // For now, let's stick to 1024x1024 for edits validation to be safe
+                    formData.append('size', size)
+                    // Note: GPT 1.5 Edits endpoint supports non-square sizes matching the generation spec
 
                     // Support multiple reference images
                     input.referenceImages.forEach((refImg, index) => {
@@ -351,11 +353,12 @@ class StudioAIClient {
                         model: 'gpt-image-1.5',
                         size: size,
                         quality: quality,
-                        output_compression: 100,
-                        output_format: 'png',
+                        output_compression: input.output_compression || 50,
+                        output_format: input.output_format || 'jpeg',
+                        background: input.background, // 'transparent' or undefined
                         n: input.numberOfImages || 1
                     })
-                    console.log('[GPT-Image] Using text-to-image endpoint:', targetUrl, { size, quality })
+                    console.log('[GPT-Image] Using text-to-image endpoint:', targetUrl, { size, quality, format: input.output_format })
                 }
 
                 console.log('[GPT-Image] Generating with:', { url: targetUrl, model, promptLen: input.prompt.length })
