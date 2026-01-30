@@ -25,6 +25,7 @@ export function CockpitPromptBar() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [batchCount, setBatchCount] = useState(1)
   const [showBatchDropdown, setShowBatchDropdown] = useState(false)
+  const [showModelDropdown, setShowModelDropdown] = useState(false)
   const [showQualityDropdown, setShowQualityDropdown] = useState(false)
   const [showRatioDropdown, setShowRatioDropdown] = useState(false)
   const [showNegative, setShowNegative] = useState(false)
@@ -306,6 +307,55 @@ export function CockpitPromptBar() {
         {/* BOTTOM ROW: Controls */}
         <div className="flex items-center justify-between px-4 pb-3 pt-2 border-t border-zinc-800/30">
             <div className="flex items-center gap-2">
+                {/* Model Selector */}
+                <div className="relative">
+                    <button
+                        onClick={() => setShowModelDropdown(!showModelDropdown)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800/50 border border-zinc-700/50 hover:bg-zinc-800 hover:border-zinc-600 transition-all text-[11px] font-bold text-zinc-300"
+                    >
+                        {generationSettings.model 
+                            ? (generationMode === 'video' 
+                                ? [
+                                    { id: 'veo-3.1-fast-generate-preview', label: 'Veo 3.1' },
+                                    { id: 'sora-2', label: 'Sora 2' }
+                                  ].find(m => m.id === generationSettings.model)?.label || 'Veo 3.1'
+                                : [
+                                    { id: 'gemini-3-pro-image-preview', label: 'Nano Banana Pro' },
+                                    { id: 'gpt-image-1', label: 'GPT Image 1.5' }
+                                  ].find(m => m.id === generationSettings.model)?.label || 'GPT Image 1.5')
+                            : (generationMode === 'video' ? 'Veo 3.1' : 'GPT Image 1.5')}
+                        <ChevronDown size={10} />
+                    </button>
+                    {showModelDropdown && (
+                        <>
+                        <div className="fixed inset-0 z-30" onClick={() => setShowModelDropdown(false)} />
+                        <div className="absolute bottom-full left-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl z-40 p-1 min-w-[140px] flex flex-col gap-0.5">
+                            {(generationMode === 'video' 
+                                ? [
+                                    { id: 'veo-3.1-fast-generate-preview', label: 'Veo 3.1' },
+                                    { id: 'sora-2', label: 'Sora 2' }
+                                  ]
+                                : [
+                                    { id: 'gemini-3-pro-image-preview', label: 'Nano Banana Pro' },
+                                    { id: 'gpt-image-1', label: 'GPT Image 1.5' }
+                                  ]
+                            ).map((model) => (
+                                <button
+                                    key={model.id}
+                                    onClick={() => { updateGenerationSettings({ model: model.id }); setShowModelDropdown(false) }}
+                                    className={cn(
+                                        "w-full px-3 py-1.5 rounded text-[10px] font-medium text-left transition-all",
+                                        generationSettings.model === model.id ? "bg-zinc-800 text-zinc-100" : "text-zinc-400 hover:bg-zinc-800/50"
+                                    )}
+                                >
+                                    {model.label}
+                                </button>
+                            ))}
+                        </div>
+                        </>
+                    )}
+                </div>
+
                 {/* Batch Count */}
                 <div className="relative">
                     <button
