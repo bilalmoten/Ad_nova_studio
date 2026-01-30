@@ -152,9 +152,9 @@ export async function generateV2Image(
             aspectRatio: getAspectRatio(options.width, options.height) as any,
             width: options.width,
             height: options.height,
-            quality: isHD ? 'hd' : 'standard',
+            quality: options.quality,
             output_format: options.output_format,
-            output_compression: options.output_compression,
+            output_compression: options.output_format === 'png' ? 100 : options.output_compression,
             background: options.background,
             numberOfImages: count, // Use input count
             model: modelToUse,
@@ -283,7 +283,7 @@ export async function generateV2Video(
         const videoHeight = (placeholderAsset.metadata as any).height || 1280
 
         // Convert reference image URL to base64 and resize to match video dimensions
-        let startFrame: { base64: string; mimeType: 'image/jpeg' | 'image/png' | 'image/webp' } | undefined
+        let startFrame: { base64: string; mimeType: 'image/jpeg' | 'image/png' } | undefined
         if (options.image_url) {
             try {
                 console.log('[Video] Fetching and resizing reference image to', videoWidth, 'x', videoHeight)

@@ -63,7 +63,7 @@ export interface TextGenerationInput {
 
 export interface ImageInput {
     base64: string
-    mimeType: 'image/png' | 'image/jpeg' | 'image/webp'
+    mimeType: 'image/png' | 'image/jpeg'
 }
 
 export interface ImageGenerationInput {
@@ -75,8 +75,8 @@ export interface ImageGenerationInput {
     height?: number
     numberOfImages?: number
     model?: string
-    quality?: 'standard' | 'hd' | 'low' | 'medium' | 'high' | 'auto' | string
-    output_format?: 'jpeg' | 'png' | 'webp'
+    quality?: 'low' | 'medium' | 'high' | 'auto' | string
+    output_format?: 'jpeg' | 'png'
     output_compression?: number
     background?: 'transparent'
     azureConfig?: AzureConfig
@@ -278,6 +278,14 @@ class StudioAIClient {
         input: ImageGenerationInput
     ): Promise<GenerationResult<{ images: Array<{ base64: string; mimeType: string }> }>> {
         const startTime = Date.now()
+        if (!input.prompt || !input.prompt.trim()) {
+            return {
+                success: false,
+                error: 'Prompt is required',
+                model: input.model || 'unknown',
+                durationMs: 0
+            }
+        }
         const model = input.model || STUDIO_MODELS.image.gemini
         const isAzure = model === STUDIO_MODELS.image.openam
 
@@ -322,7 +330,7 @@ class StudioAIClient {
                     else size = '1024x1024'
                 }
 
-                const quality = input.quality || 'standard'
+                const quality = input.quality || 'auto'
 
                 // ---------------------------------------------------------
                 // GPT-Image-1.5 Native Image Editing
@@ -353,8 +361,8 @@ class StudioAIClient {
                         model: 'gpt-image-1.5',
                         size: size,
                         quality: quality,
-                        output_compression: input.output_compression || 50,
-                        output_format: input.output_format || 'jpeg',
+                        output_compression: input.output_compression || 100,
+                        output_format: input.output_format || 'png',
                         background: input.background, // 'transparent' or undefined
                         n: input.numberOfImages || 1
                     })

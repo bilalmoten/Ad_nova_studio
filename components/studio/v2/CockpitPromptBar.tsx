@@ -563,7 +563,7 @@ function FormatTab({ aspectRatio, resolution, quality, format, compression, back
     const ratios = ['16:9', '9:16', '1:1', '4:5']
     const resolutions = ['720p', '1080p', '4k']
     const qualities = ['low', 'medium', 'high', 'auto']
-    const formats = ['jpeg', 'png', 'webp']
+    const formats = ['jpeg', 'png']
     
     return (
         <>
@@ -587,7 +587,7 @@ function FormatTab({ aspectRatio, resolution, quality, format, compression, back
                 {formats.map((f) => <PresetButton key={f} label={f.toUpperCase()} active={format === f} onClick={() => onFormatChange(f)} />)}
             </div>
             
-            {(format === 'jpeg' || format === 'webp') && (
+            {(format === 'jpeg' ) && (
                 <>
                     <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">Compression</div>
                     <div className="flex items-center gap-3 mb-4">

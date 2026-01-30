@@ -30,7 +30,7 @@ export interface GenerationSettings {
     negativePrompt?: string
     model?: string
     // Output
-    format?: 'jpeg' | 'png' | 'webp'
+    format?: 'jpeg' | 'png'
     compression?: number
     background?: 'transparent'
     quality?: 'low' | 'medium' | 'high' | 'auto'
